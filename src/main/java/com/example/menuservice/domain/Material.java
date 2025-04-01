@@ -6,10 +6,12 @@ import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import org.springframework.data.annotation.*;
 import org.springframework.data.relational.core.mapping.Column;
+
 import java.time.Instant;
 
 @Builder
-public record MainMaterial(
+
+public record Material(
         @Id
         Long uid,
 

@@ -11,7 +11,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MainMaterialResponseDTO {
+public class MaterialResponseDTO {
 
     private Long uid;
     private String materialName;

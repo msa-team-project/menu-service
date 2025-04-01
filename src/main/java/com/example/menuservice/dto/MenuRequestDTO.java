@@ -28,10 +28,10 @@ public class MenuRequestDTO {
     private Long bread;
 
     @NotNull(message = "The main material 1 must be defined.")
-    private Long mainMaterial1;
+    private Long material1;
 
-    private Long mainMaterial2;
-    private Long mainMaterial3;
+    private Long material2;
+    private Long material3;
 
     private Long cheese;
 

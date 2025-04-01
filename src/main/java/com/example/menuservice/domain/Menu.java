@@ -5,13 +5,17 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.annotation.*;
 import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.Instant;
 
 
 
 @Builder
+@Table("menu")
 public record Menu(
         @Id
         Long uid,
@@ -30,11 +34,11 @@ public record Menu(
         Long bread,
 
 
-        @NotNull(message = "The main material 1 must be defined.")
-        Long mainMaterial1,
+        @NotNull(message = "The material 1 must be defined.")
+        Long material1,
 
-        Long mainMaterial2,
-        Long mainMaterial3,
+        Long material2,
+        Long material3,
 
         Long cheese,
 

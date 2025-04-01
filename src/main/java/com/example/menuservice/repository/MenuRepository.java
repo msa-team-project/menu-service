@@ -24,7 +24,7 @@ public interface MenuRepository extends CrudRepository<Menu, Long> {
     // 메뉴 이름으로 삭제하는 메서드
     @Modifying
     @Transactional
-    @Query("DELETE FROM Menu m WHERE m.menuName = :menuName")
+    @Query("DELETE FROM Menu m WHERE m.menu_name = :menuName")
     void deleteByMenuName(String menuName);
 
     // 메뉴 이름이 존재하는지 확인하는 메서드
