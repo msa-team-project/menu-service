@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload to S3</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="upload-container">
+    <h1>Upload Image to S3</h1>
+    <form id="upload-form">
+        <input type="file" id="image-file" accept="image/*" required />
+        <button type="submit">Upload Image</button>
+    </form>
+    <div id="status"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1084.0/aws-sdk.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
