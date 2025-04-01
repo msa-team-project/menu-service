@@ -45,9 +45,9 @@ public class MenuService {
                 .price(menuRequestDTO.getPrice())
                 .calorie(menuRequestDTO.getCalorie())
                 .bread(menuRequestDTO.getBread())
-                .mainMaterial1(menuRequestDTO.getMainMaterial1())
-                .mainMaterial2(menuRequestDTO.getMainMaterial2())
-                .mainMaterial3(menuRequestDTO.getMainMaterial3())
+                .material1(menuRequestDTO.getMaterial1())
+                .material2(menuRequestDTO.getMaterial2())
+                .material3(menuRequestDTO.getMaterial3())
                 .cheese(menuRequestDTO.getCheese())
                 .vegetable1(menuRequestDTO.getVegetable1())
                 .vegetable2(menuRequestDTO.getVegetable2())
@@ -88,9 +88,9 @@ public class MenuService {
                 .price(menuRequestDTO.getPrice())
                 .calorie(menuRequestDTO.getCalorie())
                 .bread(menuRequestDTO.getBread())
-                .mainMaterial1(menuRequestDTO.getMainMaterial1())
-                .mainMaterial2(menuRequestDTO.getMainMaterial2())
-                .mainMaterial3(menuRequestDTO.getMainMaterial3())
+                .material1(menuRequestDTO.getMaterial1())
+                .material2(menuRequestDTO.getMaterial2())
+                .material3(menuRequestDTO.getMaterial3())
                 .cheese(menuRequestDTO.getCheese())
                 .vegetable1(menuRequestDTO.getVegetable1())
                 .vegetable2(menuRequestDTO.getVegetable2())
@@ -129,9 +129,9 @@ public class MenuService {
                 menu.price(),
                 menu.calorie(),
                 menu.bread(),
-                menu.mainMaterial1(),
-                menu.mainMaterial2(),
-                menu.mainMaterial3(),
+                menu.material1(),
+                menu.material2(),
+                menu.material3(),
                 menu.cheese(),
                 menu.vegetable1(),
                 menu.vegetable2(),

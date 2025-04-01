@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MainMaterialRequestDTO {
+public class MaterialRequestDTO {
 
     @NotBlank(message = "The material name must be defined.")
     private String materialName;

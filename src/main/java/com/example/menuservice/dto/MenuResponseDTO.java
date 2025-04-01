@@ -18,9 +18,9 @@ public class MenuResponseDTO {
     private Long price;
     private Double calorie;
     private Long bread;
-    private Long mainMaterial1;
-    private Long mainMaterial2;
-    private Long mainMaterial3;
+    private Long material1;
+    private Long material2;
+    private Long material3;
     private Long cheese;
     private Long vegetable1;
     private Long vegetable2;
