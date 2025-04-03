@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,14 +20,12 @@ public class SideService {
 
     // 사이드 목록 조회
     public List<SideResponseDTO> viewSideList() {
-        List<SideResponseDTO> sideResponseDTOList = new ArrayList<>();
-        for (Side side : sideRepository.findAll()) {
-            sideResponseDTOList.add(toResponseDTO(side));
-        }
-        return sideResponseDTOList;
+        return sideRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    // 사이드 이름으로 사이드 조회
+    // 사이드 이름으로 조회
     public SideResponseDTO viewSide(String sideName) {
         Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
@@ -35,71 +33,67 @@ public class SideService {
     }
 
     // 사이드 추가
-    public SideResponseDTO addSide(SideRequestDTO sideRequestDTO) {
-        if (sideRepository.existsBySideName(sideRequestDTO.getSideName())) {
-            throw new SideAlreadyExistsException(sideRequestDTO.getSideName());
+    @Transactional
+    public SideResponseDTO addSide(SideRequestDTO requestDTO) {
+        if (sideRepository.existsBySideName(requestDTO.getSideName())) {
+            throw new SideAlreadyExistsException(requestDTO.getSideName());
         }
 
         Side side = Side.builder()
-                .sideName(sideRequestDTO.getSideName())
-                .calorie(sideRequestDTO.getCalorie())
-                .price(sideRequestDTO.getPrice())
-                .img(sideRequestDTO.getImg())
+                .sideName(requestDTO.getSideName())
+                .calorie(requestDTO.getCalorie())
+                .price(requestDTO.getPrice())
+                .img(requestDTO.getImg())
                 .status("active")
                 .build();
 
-        Side savedSide = sideRepository.save(side);
-        return toResponseDTO(savedSide);
+        return toResponseDTO(sideRepository.save(side));
     }
 
     // 사이드 삭제
+    @Transactional
     public void removeSide(String sideName) {
-        if (!sideRepository.existsBySideName(sideName)) {
-            throw new SideNotFoundException(sideName);
-        }
-        sideRepository.deleteBySideName(sideName);
+        Side side = sideRepository.findBySideName(sideName)
+                .orElseThrow(() -> new SideNotFoundException(sideName));
+        sideRepository.delete(side);
     }
 
-    // 사이드 수정
+    // 사이드 수정 (변경 감지 활용)
     @Transactional
-    public SideResponseDTO editSideDetails(String sideName, SideRequestDTO sideRequestDTO) {
-        Side existingSide = sideRepository.findBySideName(sideName)
+    public SideResponseDTO editSideDetails(String sideName, SideRequestDTO requestDTO) {
+        Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
 
-        Side updatedSide = Side.builder()
-                .uid(existingSide.uid())
-                .sideName(sideRequestDTO.getSideName())
-                .calorie(sideRequestDTO.getCalorie())
-                .price(sideRequestDTO.getPrice())
-                .img(sideRequestDTO.getImg())
-                .status(existingSide.status())
-                .createdDate(existingSide.createdDate())
-                .version(existingSide.version()) // 버전 증가
-                .build();
+        // ✅ 변경 감지를 활용한 업데이트
+        side.updateSide(
+                requestDTO.getSideName(),
+                requestDTO.getCalorie(),
+                requestDTO.getPrice(),
+                requestDTO.getImg()
+        );
 
-        Side savedSide = sideRepository.save(updatedSide);
-        return toResponseDTO(savedSide);
+        return toResponseDTO(side);
     }
 
     // 사이드 상태 업데이트
+    @Transactional
     public void updateSideStatus(Long uid, String status) {
-        if (!sideRepository.existsById(uid)) {
-            throw new SideNotFoundException("ID: " + uid);
-        }
-        sideRepository.updateStatusByUid(uid, status);
+        Side side = sideRepository.findById(uid)
+                .orElseThrow(() -> new SideNotFoundException("ID: " + uid));
+        side.setStatus(status);
     }
 
     // Side -> SideResponseDTO 변환 메서드
     private SideResponseDTO toResponseDTO(Side side) {
         return new SideResponseDTO(
-                side.uid(),
-                side.sideName(),
-                side.calorie(),
-                side.price(),
-                side.status(),
-                side.img(),
-                side.createdDate(),
-                side.version()
+                side.getUid(),
+                side.getSideName(),
+                side.getCalorie(),
+                side.getPrice(),
+                side.getStatus(),
+                side.getImg(),
+                side.getCreatedDate(),
+                side.getVersion()
         );
     }
 }

@@ -43,4 +43,10 @@ public class BreadApiController {
     public void deleteBread(@PathVariable String breadName) {
         breadService.removeBread(breadName);
     }
+
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateBreadStatus(@PathVariable Long uid, @RequestParam String status) {
+        breadService.updateBreadStatus(uid, status);
+    }
 }

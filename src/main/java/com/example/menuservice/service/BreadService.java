@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.BreadStatus;
 import com.example.menuservice.domain.Bread;
 import com.example.menuservice.dto.BreadRequestDTO;
 import com.example.menuservice.dto.BreadResponseDTO;
@@ -10,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,12 +21,9 @@ public class BreadService {
 
     // 빵 목록 조회
     public List<BreadResponseDTO> viewBreadList() {
-        List<BreadResponseDTO> breadResponseDTOList = new ArrayList<>();
-
-        for (Bread bread : breadRepository.findAll()) {
-            breadResponseDTOList.add(toResponseDTO(bread));
-        }
-        return breadResponseDTOList;
+        return breadRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     // 빵 이름으로 빵 조회
@@ -36,29 +34,39 @@ public class BreadService {
     }
 
     // 빵 추가
+    @Transactional
     public BreadResponseDTO addBread(BreadRequestDTO breadRequestDTO) {
         if (breadRepository.existsByBreadName(breadRequestDTO.getBreadName())) {
             throw new BreadAlreadyExistsException(breadRequestDTO.getBreadName());
         }
 
+        // ✅ 1. 상태 값 검증 (기본값: ACTIVE)
+        BreadStatus status;
+        try {
+            status = BreadStatus.valueOf(breadRequestDTO.getStatus().toUpperCase()); // 대소문자 구분 없이 처리
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("잘못된 상태 값입니다: " + breadRequestDTO.getStatus());
+        }
+
+        // ✅ 2. 빵 저장
         Bread bread = Bread.builder()
                 .breadName(breadRequestDTO.getBreadName())
                 .calorie(breadRequestDTO.getCalorie())
                 .price(breadRequestDTO.getPrice())
                 .img(breadRequestDTO.getImg())
-                .status("active")
+                .status(String.valueOf(status)) // 유효한 상태 값 저장
                 .build();
 
-        Bread savedBread = breadRepository.save(bread);
-        return toResponseDTO(savedBread);
+        return toResponseDTO(breadRepository.save(bread));
     }
 
+
     // 빵 삭제
+    @Transactional
     public void removeBread(String breadName) {
-        if (!breadRepository.existsByBreadName(breadName)) {
-            throw new BreadNotFoundException(breadName);
-        }
-        breadRepository.deleteByBreadName(breadName);
+        Bread bread = breadRepository.findByBreadName(breadName)
+                .orElseThrow(() -> new BreadNotFoundException(breadName));
+        breadRepository.delete(bread);
     }
 
     // 빵 수정
@@ -67,40 +75,35 @@ public class BreadService {
         Bread existingBread = breadRepository.findByBreadName(breadName)
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
 
-        Bread updatedBread = Bread.builder()
-                .uid(existingBread.uid())
-                .breadName(breadRequestDTO.getBreadName())
-                .calorie(breadRequestDTO.getCalorie())
-                .price(breadRequestDTO.getPrice())
-                .img(breadRequestDTO.getImg())
-                .status(existingBread.status())
-                .createdDate(existingBread.createdDate())
-                .version(existingBread.version()) // 버전 증가
-                .build();
+        existingBread.updateBread(
+                breadRequestDTO.getBreadName(),
+                breadRequestDTO.getCalorie(),
+                breadRequestDTO.getPrice(),
+                breadRequestDTO.getImg()
+        );
 
-        Bread savedBread = breadRepository.save(updatedBread);
-        return toResponseDTO(savedBread);
+        return toResponseDTO(existingBread);
     }
 
     // 빵 상태 업데이트
+    @Transactional
     public void updateBreadStatus(Long uid, String status) {
-        if (!breadRepository.existsById(uid)) {
-            throw new BreadNotFoundException("ID: " + uid);
-        }
-        breadRepository.updateStatusByUid(uid, status);
+        Bread bread = breadRepository.findById(uid)
+                .orElseThrow(() -> new BreadNotFoundException("ID: " + uid));
+        bread.setStatus(status);
     }
 
     // Bread -> BreadResponseDTO 변환 메서드
     private BreadResponseDTO toResponseDTO(Bread bread) {
         return new BreadResponseDTO(
-                bread.uid(),
-                bread.breadName(),
-                bread.calorie(),
-                bread.price(),
-                bread.img(),
-                bread.status(),
-                bread.createdDate(),
-                bread.version()
+                bread.getUid(),
+                bread.getBreadName(),
+                bread.getCalorie(),
+                bread.getPrice(),
+                bread.getImg(),
+                bread.getStatus(),
+                bread.getCreatedDate(),
+                bread.getVersion()
         );
     }
 }
