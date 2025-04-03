@@ -79,7 +79,8 @@ public class BreadService {
                 breadRequestDTO.getBreadName(),
                 breadRequestDTO.getCalorie(),
                 breadRequestDTO.getPrice(),
-                breadRequestDTO.getImg()
+                breadRequestDTO.getImg(),
+                breadRequestDTO.getStatus()
         );
 
         return toResponseDTO(existingBread);

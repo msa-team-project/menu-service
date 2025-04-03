@@ -16,6 +16,7 @@ public interface BreadRepository extends JpaRepository<Bread, Long> {
     Optional<Bread> findByBreadName(String breadName);
 
 
+
     // ✅ 빵 이름 존재 여부 확인
     boolean existsByBreadName(String breadName);
 }
