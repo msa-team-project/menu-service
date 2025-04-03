@@ -1,6 +1,5 @@
 $(document).ready(function () {
     $("#updateBtn").on("click", function () {
-        let uid = $("#uid").val();
         let breadName = $("#breadName").val();
         let calorie = parseFloat($("#calorie").val());
         let price = parseInt($("#price").val(), 10);
@@ -9,7 +8,7 @@ $(document).ready(function () {
         let currentImageUrl = $("#imgUrl").val();
         let fileInput = $("#img")[0].files[0];
 
-        // 새 이미지 업로드
+        // ✅ 이미지 업로드가 필요한 경우
         if (fileInput) {
             let imageFormData = new FormData();
             imageFormData.append("file", fileInput);
@@ -20,16 +19,17 @@ $(document).ready(function () {
                 data: imageFormData,
                 processData: false,
                 contentType: false
-            }).then((response) => {
-                if (response.success) {
-                    updateBread(breadName, calorie, price, response.url, convertedStatus);
-                } else {
+            }).then((imageResponse) => {
+                if (!imageResponse.success) {
                     alert("이미지 업로드에 실패했습니다.");
+                    return;
                 }
+                updateBread(breadName, calorie, price, imageResponse.url, convertedStatus);
             }).catch(() => {
                 alert("이미지 업로드 중 오류가 발생했습니다.");
             });
         } else {
+            // ✅ 새 이미지 없을 경우 기존 이미지 유지
             updateBread(breadName, calorie, price, currentImageUrl, convertedStatus);
         }
     });
