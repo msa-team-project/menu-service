@@ -1,38 +1,47 @@
 package com.example.menuservice.domain;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.Instant;
 
+@Getter
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public record Store(
+@Table(name = "store")
+public class Store{
         @Id
-        int uid,
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long uid;
 
         @NotBlank(message = "the store name must be defined.")
-        String storeName,
+        @Column(name = "store_name")
+        private String storeName;
 
         @NotBlank(message = "the address must be defined.")
-        String address,
+        @Column(name = "address")
+        private String storeAddress;
 
         @NotNull(message = "the postcode must be defined.")
-        int postcode,
+        @Column(name = "postcode")
+        private int storePostcode;
 
-        @NotBlank(message ="the status must be defined." )
-        String status,
+        @NotBlank(message = "the status must be defined.")
+        @Column(name = "status")
+        private String storeStatus;
 
-        @Column("created_date")
         @CreatedDate
-        Instant createdDate,
+        @Column(name = "created_date", updatable = false)
+        private Instant storeCreatedDate;
 
         @Version
-        int version
-
-) {
+        private int version;
 }
