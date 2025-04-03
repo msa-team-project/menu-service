@@ -1,8 +1,10 @@
+//
 //package com.example.menuservice.service;
 //
 //import com.example.menuservice.domain.Store;
-//import com.example.menuservice.dto.StoreRequestDTO;
-//import com.example.menuservice.dto.StoreResponseDTO;
+//import com.example.menuservice.dto.store.StoreListResponseDTO;
+//import com.example.menuservice.dto.store.StoreRequestDTO;
+//import com.example.menuservice.dto.store.StoreResponseDTO;
 //import com.example.menuservice.exception.StoreAlreadyExistsException;
 //import com.example.menuservice.exception.StoreNotFoundException;
 //import com.example.menuservice.repository.StoreRepository;
@@ -10,8 +12,8 @@
 //import org.springframework.stereotype.Service;
 //import org.springframework.transaction.annotation.Transactional;
 //
-//import java.util.ArrayList;
 //import java.util.List;
+//import java.util.stream.Collectors;
 //
 //@Service
 //@RequiredArgsConstructor
@@ -19,84 +21,103 @@
 //
 //    private final StoreRepository storeRepository;
 //
-//    // 지점 목록 조회
-//    public List<StoreResponseDTO> viewStoreList() {
-//        List<StoreResponseDTO> storeResponseDTOList = new ArrayList<>();
-//        for (Store store : storeRepository.findAll()) {
-//            storeResponseDTOList.add(toStoreResponseDTO(store));
-//        }
-//        return storeResponseDTOList;
-//    }
-//
-//    // 지점 이름으로 지점 조회
-//    public StoreResponseDTO viewStore(int uid) {
-//        Store store = storeRepository.findByUid(uid)
-//                .orElseThrow(() -> new StoreNotFoundException(uid));
-//        return toStoreResponseDTO(store);
-//    }
-//
-//    //지점 추가
-//    public StoreResponseDTO addStore(StoreRequestDTO storeRequestDTO) throws StoreAlreadyExistsException {
-//        if(storeRepository.existsByStoreName(storeRequestDTO.getStoreName())) {
-//            throw new StoreAlreadyExistsException(storeRequestDTO.getStoreName());
-//        }
-//
-//        Store store =   Store.builder()
-//                .storeName(storeRequestDTO.getStoreName())
-//                .address(storeRequestDTO.getAddress())
-//                .postcode(storeRequestDTO.getPostcode())
-//                .status(storeRequestDTO.getStatus())
-//                .build();
-//        Store saveStore = storeRepository.save(store);//DB에 저장해 줌.
-//        return toStoreResponseDTO(saveStore);
-//    }
-//
-//    //지점 수정
+//    //지점 목록 조회(커서방식)
 //    @Transactional
-//    public StoreResponseDTO updateStore(int uid,StoreRequestDTO storeRequestDTO) throws StoreNotFoundException {
-//        Store existingStore = storeRepository.findByUid(uid)
-//                .orElseThrow(() -> new StoreNotFoundException(uid));
+//    public StoreListResponseDTO getStoresByCursor(Long lastUid, int limit) {
+//        List<Store> stores;
 //
-//        Store updateStore = Store.builder()
-//                .uid(existingStore.uid())
-//                .storeName(storeRequestDTO.getStoreName())
-//                .address(storeRequestDTO.getAddress())
-//                .postcode(storeRequestDTO.getPostcode())
-//                .status(storeRequestDTO.getStatus())
-//                .createdDate(existingStore.createdDate())
-//                .version(existingStore.version())//버전 증가
-//                .build();
-//        Store saveStore = storeRepository.save(updateStore);
-//        return toStoreResponseDTO(saveStore);
-//    }
+//        //처음 요청일 때(lastUid가 null인 경우
+//        if (lastUid == null) {
+//            stores = storeRepository.findFirstByOrderByUidAsc(limit);
+//            return null;
+//        } else {
+//            //lastUid 이후로 데이터 가져오기
+//            stores = storeRepository.findByUidGreaterThanOrderByUidAsc(lastUid, limit);
 //
-//   //지점 상태 변경
-//   public void updateStatusStore(int uid, String status) throws StoreNotFoundException {
-//        if (!storeRepository.existsById(uid)) {
-//            throw new StoreNotFoundException(uid);
+//            //StoreResponseDTO로 변환
+//            List<StoreResponseDTO> storeResponseDTOS = stores.stream()
+//                    .map(StoreResponseDTO::new)
+//                    .collect(Collectors.toList());
+//
+//            //마지막 페이지 여부 계산
+//            boolean lastPage = stores.size() < limit;
+//
+//            //nextCursor 계산:마지막 요소의 uid를 nextCursor로 설정
+//            Long nextCursor = stores.isEmpty() ? null : stores.get(stores.size() - 1).getUid();
+//
+//            return StoreListResponseDTO.builder()
+//                    .storeList(storeResponseDTOS)
+//                    .lastPage(lastPage)
+//                    .nextCursor(nextCursor)
+//                    .build();
+//
 //        }
-//        storeRepository.updateStatusByUid(uid,status);
-//   }
+//    }
 //
-//   //지점 삭제
-//    public void deleteStore(int uid) {
-//        if (!storeRepository.existsById(uid)) {
-//        throw new StoreNotFoundException(uid);
+//        // 지점 이름으로 지점 조회
+//        public StoreResponseDTO viewStore (Long uid){
+//            Store store = storeRepository.findByUid(uid)
+//                    .orElseThrow(() -> new StoreNotFoundException(uid));
+//            return toStoreResponseDTO(store);
 //        }
-//        storeRepository.deleteByUid(uid);
+//
+//        //지점 추가
+//        public StoreResponseDTO addStore (StoreRequestDTO storeRequestDTO) throws StoreAlreadyExistsException {
+//            if (storeRepository.existsByStoreName(storeRequestDTO.getStoreName())) {
+//                throw new StoreAlreadyExistsException(storeRequestDTO.getStoreName());
+//            }
+//
+//            Store store = Store.builder()
+//                    .storeName(storeRequestDTO.getStoreName())
+//                    .storeAddress(storeRequestDTO.getStoreAddress())
+//                    .storePostcode(storeRequestDTO.getStorePostcode())
+//                    .storeStatus(storeRequestDTO.getStoreStatus())
+//                    .build();
+//            Store saveStore = storeRepository.save(store);//DB에 저장해 줌.
+//            return toStoreResponseDTO(saveStore);
+//        }
+//
+//        //지점 수정
+//        @Transactional
+//        public StoreResponseDTO updateStore (Long uid, StoreRequestDTO storeRequestDTO) throws StoreNotFoundException {
+//            Store existingStore = storeRepository.findByUid(uid)
+//                    .orElseThrow(() -> new StoreNotFoundException(uid));
+//
+//            Store updateStore = Store.builder()
+//                    .uid(existingStore.getUid())
+//                    .storeName(storeRequestDTO.getStoreName())
+//                    .storeAddress(storeRequestDTO.getStoreAddress())
+//                    .storePostcode(storeRequestDTO.getStorePostcode())
+//                    .storeStatus(storeRequestDTO.getStoreStatus())
+//                    .storeCreatedDate(existingStore.getStoreCreatedDate())
+//                    .version(existingStore.getVersion())//버전 증가
+//                    .build();
+//            Store saveStore = storeRepository.save(updateStore);
+//            return toStoreResponseDTO(saveStore);
+//        }
+//
+//        //지점 상태 변경
+//        public void updateStatusStore (Long uid, String status) throws StoreNotFoundException {
+//            if (!storeRepository.existsById(uid)) {
+//                throw new StoreNotFoundException(uid);
+//            }
+//            storeRepository.updateStatusByUid(uid, status);
+//        }
+//
+//        //지점 삭제
+//        public void deleteStore (Long uid){
+//            if (!storeRepository.existsById(uid)) {
+//                throw new StoreNotFoundException(uid);
+//            }
+//            storeRepository.deleteByUid(uid);
+//        }
+//
+//
+//        // Store -> StoreResponseDTO 변환 메서드
+//        private StoreResponseDTO toStoreResponseDTO (Store store) {
+//        return new StoreResponseDTO(store);
+//
 //    }
 //
-//
-//
-//    // Store -> StoreResponseDTO 변환 메서드
-//    private StoreResponseDTO toStoreResponseDTO(Store store) {
-//        return new StoreResponseDTO(
-//                store.uid(),
-//                store.storeName(),
-//                store.address(),
-//                store.postcode(),
-//                store.status(),
-//                store.createdDate()
-//        );
-//    }
 //}
+//
