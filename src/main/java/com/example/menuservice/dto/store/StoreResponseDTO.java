@@ -18,15 +18,16 @@ public class StoreResponseDTO {
     private String  storeStatus;
     private Instant storeCreatedDate;
 
-    public StoreResponseDTO(Store store) {
-        this.uid = store.getUid();
-        this.storeName = store.getStoreName();
-        this.storeAddress = store.getStoreAddress();
-        this.storePostcode = store.getStorePostcode();
-        this.storeStatus = store.getStoreStatus();
-        this.storeCreatedDate = store.getStoreCreatedDate();
+//    public StoreResponseDTO(Store store) {
+//        this.uid = store.getUid();
+//        this.storeName = store.getStoreName();
+//        this.storeAddress = store.getStoreAddress();
+//        this.storePostcode = store.getStorePostcode();
+//        this.storeStatus = store.getStoreStatus();
+//        this.storeCreatedDate = store.getStoreCreatedDate();
+//
+//    }
 
-    }
 
 
 }

@@ -1,5 +1,7 @@
 package com.example.menuservice.controller;
 
+import com.example.menuservice.dto.store.StoreListRequestDTO;
+import com.example.menuservice.dto.store.StoreListResponseDTO;
 import com.example.menuservice.dto.store.StoreRequestDTO;
 import com.example.menuservice.dto.store.StoreResponseDTO;
 import com.example.menuservice.exception.StoreAlreadyExistsException;
@@ -11,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/stores")
@@ -20,11 +24,9 @@ public class StoreApiController {
 
     //지점 목록 조회
     @GetMapping
-    public Page<StoreResponseDTO> getAllStores(
-            @PageableDefault(page = 0,size = 10)Pageable pageable
-            ) {
+    public StoreListResponseDTO getAllStores(@RequestBody StoreListRequestDTO storeListRequestDTO){
         // 지점 목록 가져오기
-        return  storeService.viewStoreList(pageable);
+        return  storeService.getStoresByCursor(storeListRequestDTO.getLastUid(), storeListRequestDTO.getLimit());
     }
 
     //지점 uid로 지점 조회

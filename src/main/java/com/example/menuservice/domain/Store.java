@@ -1,5 +1,6 @@
 package com.example.menuservice.domain;
 
+import com.example.menuservice.dto.store.StoreResponseDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -44,4 +45,17 @@ public class Store{
 
         @Version
         private int version;
+
+        // Store -> StoreResponseDTO 변환 메서드
+        public StoreResponseDTO toStoreResponseDTO () {
+                return StoreResponseDTO.builder()
+                        .uid(this.getUid())
+                        .storeName(this.getStoreName())
+                        .storeAddress(this.getStoreAddress())
+                        .storePostcode(this.getStorePostcode())
+                        .storeStatus(this.getStoreStatus())
+                        .storeCreatedDate(this.getStoreCreatedDate())
+                        .build();
+
+        }
 }
