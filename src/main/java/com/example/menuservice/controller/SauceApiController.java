@@ -44,9 +44,9 @@ public class SauceApiController {
         sauceService.removeSauce(sauceName);
     }
 
-//    // 소스 상태 업데이트
-//    @PatchMapping("/{sauceName}/status")
-//    public void updateSauceStatus(@PathVariable String sauceName, @RequestParam String status) {
-//        sauceService.updateSauceStatus(sauceName, status);
-//    }
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateSauceStatus(@PathVariable Long uid, @RequestParam String status) {
+        sauceService.updateSauceStatus(uid, status);
+    }
 }

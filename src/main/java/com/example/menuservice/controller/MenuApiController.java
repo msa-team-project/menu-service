@@ -44,11 +44,13 @@ public class MenuApiController {
         menuService.removeMenu(menuName);
     }
 
-    // 메뉴 상태 업데이트
-    @PatchMapping("/{uid}/status")
-    public void updateMenuStatus(@PathVariable Long uid, @RequestParam String status) {
+
+//    메뉴 상태 업데이트
+  @PatchMapping("/{uid}/status")
+  public void updateMenuStatus(@PathVariable Long uid, @RequestParam String status) {
         menuService.updateMenuStatus(uid, status);
-    }
+   }
+
 }
 
-//메뉴 매핑 안됨
+

@@ -44,9 +44,9 @@ public class VegetableApiController {
         vegetableService.removeVegetable(vegetableName);
     }
 
-//    // 채소 상태 업데이트
-//    @PatchMapping("/{vegetableName}/status")
-//    public void updateVegetableStatus(@PathVariable String vegetableName, @RequestParam String status) {
-//        vegetableService.updateVegetableStatus(vegetableName, status);
-//    }
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateVegetableStatus(@PathVariable Long uid, @RequestParam String status) {
+       vegetableService.updateVegetableStatus(uid, status);
+    }
 }

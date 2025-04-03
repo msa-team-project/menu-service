@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,11 +20,9 @@ public class MaterialService {
 
     // 재료 목록 조회
     public List<MaterialResponseDTO> viewMainMaterialList() {
-        List<MaterialResponseDTO> responseDTOList = new ArrayList<>();
-        for (Material material : materialRepository.findAll()) {
-            responseDTOList.add(toResponseDTO(material));
-        }
-        return responseDTOList;
+        return materialRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     // 재료 이름으로 조회
@@ -35,6 +33,7 @@ public class MaterialService {
     }
 
     // 재료 추가
+    @Transactional
     public MaterialResponseDTO addMainMaterial(MaterialRequestDTO requestDTO) {
         if (materialRepository.existsByMaterialName(requestDTO.getMaterialName())) {
             throw new MaterialAlreadyExistsException(requestDTO.getMaterialName());
@@ -52,52 +51,49 @@ public class MaterialService {
     }
 
     // 재료 삭제
+    @Transactional
     public void removeMainMaterial(String materialName) {
-        if (!materialRepository.existsByMaterialName(materialName)) {
-            throw new MaterialNotFoundException(materialName);
-        }
-        materialRepository.deleteByMaterialName(materialName);
+        Material material = materialRepository.findByMaterialName(materialName)
+                .orElseThrow(() -> new MaterialNotFoundException(materialName));
+        materialRepository.delete(material);
     }
 
-    // 재료 수정
+    // 재료 수정 (변경 감지 기능 활용)
     @Transactional
     public MaterialResponseDTO editMainMaterialDetails(String materialName, MaterialRequestDTO requestDTO) {
-        Material existingMaterial = materialRepository.findByMaterialName(materialName)
+        Material material = materialRepository.findByMaterialName(materialName)
                 .orElseThrow(() -> new MaterialNotFoundException(materialName));
 
-        Material updatedMaterial = Material.builder()
-                .uid(existingMaterial.uid())
-                .materialName(requestDTO.getMaterialName())
-                .calorie(requestDTO.getCalorie())
-                .price(requestDTO.getPrice())
-                .img(requestDTO.getImg())
-                .status(existingMaterial.status())
-                .createdDate(existingMaterial.createdDate())
-                .version(existingMaterial.version()) // 버전 증가
-                .build();
+        // ✅ 변경 감지를 활용해 자동 업데이트
+        material.updateMaterial(
+                requestDTO.getMaterialName(),
+                requestDTO.getCalorie(),
+                requestDTO.getPrice(),
+                requestDTO.getImg()
+        );
 
-        return toResponseDTO(materialRepository.save(updatedMaterial));
+        return toResponseDTO(material);
     }
 
     // 재료 상태 업데이트
+    @Transactional
     public void updateMainMaterialStatus(Long uid, String status) {
-        if (!materialRepository.existsById(uid)) {
-            throw new MaterialNotFoundException("ID: " + uid);
-        }
-        materialRepository.updateStatusByUid(uid, status);
+        Material material = materialRepository.findById(uid)
+                .orElseThrow(() -> new MaterialNotFoundException("ID: " + uid));
+        material.setStatus(status);
     }
 
-    // MainMaterial -> MainMaterialResponseDTO 변환 메서드
+    // Material -> MaterialResponseDTO 변환 메서드
     private MaterialResponseDTO toResponseDTO(Material material) {
         return new MaterialResponseDTO(
-                material.uid(),
-                material.materialName(),
-                material.calorie(),
-                material.price(),
-                material.img(),
-                material.status(),
-                material.createdDate(),
-                material.version()
+                material.getUid(),
+                material.getMaterialName(),
+                material.getCalorie(),
+                material.getPrice(),
+                material.getImg(),
+                material.getStatus(),
+                material.getCreatedDate(),
+                material.getVersion()
         );
     }
 }

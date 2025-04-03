@@ -43,4 +43,9 @@ public class CheeseApiController {
     public void deleteCheese(@PathVariable String cheeseName) {
         cheeseService.removeCheese(cheeseName);
     }
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateCheeseStatus(@PathVariable Long uid, @RequestParam String status) {
+        cheeseService.updateCheeseStatus(uid, status);
+    }
 }

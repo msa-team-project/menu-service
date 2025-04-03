@@ -16,32 +16,37 @@ public class MaterialApiController {
 
     // 메인 재료 목록 조회
     @GetMapping
-    public Iterable<MaterialResponseDTO> getMainMaterials() {
+    public Iterable<MaterialResponseDTO> getMaterials() {
         return materialService.viewMainMaterialList();
     }
 
     // 메인 재료 조회
     @GetMapping("/{materialName}")
-    public MaterialResponseDTO getMainMaterial(@PathVariable String materialName) {
+    public MaterialResponseDTO getMaterial(@PathVariable String materialName) {
         return materialService.viewMainMaterial(materialName);
     }
 
     // 메인 재료 추가
     @PostMapping
-    public MaterialResponseDTO addMainMaterial(@Valid @RequestBody MaterialRequestDTO materialRequestDTO) {
+    public MaterialResponseDTO addMaterial(@Valid @RequestBody MaterialRequestDTO materialRequestDTO) {
         return materialService.addMainMaterial(materialRequestDTO);
     }
 
     // 메인 재료 수정
     @PutMapping("/{materialName}")
-    public MaterialResponseDTO updateMainMaterial(@PathVariable String materialName, @Valid @RequestBody MaterialRequestDTO materialRequestDTO) {
+    public MaterialResponseDTO updateMaterial(@PathVariable String materialName, @Valid @RequestBody MaterialRequestDTO materialRequestDTO) {
         return materialService.editMainMaterialDetails(materialName, materialRequestDTO);
     }
 
     // 메인 재료 삭제
     @DeleteMapping("/{materialName}")
-    public void deleteMainMaterial(@PathVariable String materialName) {
+    public void deleteMaterial(@PathVariable String materialName) {
         materialService.removeMainMaterial(materialName);
+    }
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateMaterialStatus(@PathVariable Long uid, @RequestParam String status) {
+        materialService.updateMainMaterialStatus(uid, status);
     }
 }
 

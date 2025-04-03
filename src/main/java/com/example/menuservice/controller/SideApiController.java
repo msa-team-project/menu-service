@@ -44,9 +44,9 @@ public class SideApiController {
         sideService.removeSide(sideName);
     }
 
-//    // 사이드 상태 업데이트
-//    @PatchMapping("/{sideName}/status")
-//    public void updateSideStatus(@PathVariable String sideName, @RequestParam String status) {
-//        sideService.updateSideStatus(sideName, status);
-//    }
+    //     상태 업데이트
+    @PatchMapping("/{uid}/status")
+    public void updateBreadStatus(@PathVariable Long uid, @RequestParam String status) {
+        sideService.updateSideStatus(uid, status);
+    }
 }

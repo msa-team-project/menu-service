@@ -1,40 +1,61 @@
 package com.example.menuservice.domain;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Builder;
-import org.springframework.data.annotation.*;
-import org.springframework.data.relational.core.mapping.Column;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
+@Entity
+@Table(name = "material")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
+public class Material {
 
-public record Material(
         @Id
-        Long uid,
+        @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL AUTO_INCREMENT 설정
+        private Long uid;
 
         @NotBlank(message = "The material name must be defined.")
-        String materialName,
+        @Column(nullable = false)
+        private String materialName;
 
         @NotNull(message = "The calorie count must be defined.")
-        Double calorie,
+        @Column(nullable = false)
+        private Double calorie;
 
         @NotNull(message = "The price must be defined.")
         @Positive(message = "The price must be greater than zero.")
-        int price,
+        @Column(nullable = false)
+        private int price;
 
         @NotBlank(message = "The image URL must be defined.")
-        String img,
+        @Column(nullable = false)
+        private String img;
 
-        @Column("status")
-        String status,
+        @Column(nullable = false)
+        private String status;
 
-        @Column("created_date")
+        @Column(name = "created_date", updatable = false)
+        @Temporal(TemporalType.TIMESTAMP)
         @CreatedDate
-        Instant createdDate,
+        private Instant createdDate;
 
         @Version
-        int version
-) {}
+        private int version;
+        // ✅ 재료 정보 업데이트 메서드 추가
+        public void updateMaterial(String materialName, Double calorie, int price, String img) {
+                this.materialName = materialName;
+                this.calorie = calorie;
+                this.price = price;
+                this.img = img;
+        }
+}

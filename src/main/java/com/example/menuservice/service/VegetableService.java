@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,14 +20,12 @@ public class VegetableService {
 
     // 채소 목록 조회
     public List<VegetableResponseDTO> viewVegetableList() {
-        List<VegetableResponseDTO> vegetableResponseDTOList = new ArrayList<>();
-        for (Vegetable vegetable : vegetableRepository.findAll()) {
-            vegetableResponseDTOList.add(toResponseDTO(vegetable));
-        }
-        return vegetableResponseDTOList;
+        return vegetableRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    // 채소 이름으로 채소 조회
+    // 채소 이름으로 조회
     public VegetableResponseDTO viewVegetable(String vegetableName) {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
@@ -35,72 +33,67 @@ public class VegetableService {
     }
 
     // 채소 추가
-
-    public VegetableResponseDTO addVegetable(VegetableRequestDTO vegetableRequestDTO) {
-        if (vegetableRepository.existsByVegetableName(vegetableRequestDTO.getVegetableName())) {
-            throw new VegetableAlreadyExistsException(vegetableRequestDTO.getVegetableName());
+    @Transactional
+    public VegetableResponseDTO addVegetable(VegetableRequestDTO requestDTO) {
+        if (vegetableRepository.existsByVegetableName(requestDTO.getVegetableName())) {
+            throw new VegetableAlreadyExistsException(requestDTO.getVegetableName());
         }
 
         Vegetable vegetable = Vegetable.builder()
-                .vegetableName(vegetableRequestDTO.getVegetableName())
-                .calorie(vegetableRequestDTO.getCalorie())
-                .price(vegetableRequestDTO.getPrice())
-                .img(vegetableRequestDTO.getImg())
+                .vegetableName(requestDTO.getVegetableName())
+                .calorie(requestDTO.getCalorie())
+                .price(requestDTO.getPrice())
+                .img(requestDTO.getImg())
                 .status("active")
                 .build();
 
-        Vegetable savedVegetable = vegetableRepository.save(vegetable);
-        return toResponseDTO(savedVegetable);
+        return toResponseDTO(vegetableRepository.save(vegetable));
     }
 
     // 채소 삭제
+    @Transactional
     public void removeVegetable(String vegetableName) {
-        if (!vegetableRepository.existsByVegetableName(vegetableName)) {
-            throw new VegetableNotFoundException(vegetableName);
-        }
-        vegetableRepository.deleteByVegetableName(vegetableName);
+        Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
+                .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
+        vegetableRepository.delete(vegetable);
     }
 
-    // 채소 수정
+    // 채소 수정 (변경 감지 활용)
     @Transactional
-    public VegetableResponseDTO editVegetableDetails(String vegetableName, VegetableRequestDTO vegetableRequestDTO) {
-        Vegetable existingVegetable = vegetableRepository.findByVegetableName(vegetableName)
+    public VegetableResponseDTO editVegetableDetails(String vegetableName, VegetableRequestDTO requestDTO) {
+        Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
 
-        Vegetable updatedVegetable = Vegetable.builder()
-                .uid(existingVegetable.uid())
-                .vegetableName(vegetableRequestDTO.getVegetableName())
-                .calorie(vegetableRequestDTO.getCalorie())
-                .price(vegetableRequestDTO.getPrice())
-                .img(vegetableRequestDTO.getImg())
-                .status(existingVegetable.status())
-                .createdDate(existingVegetable.createdDate())
-                .version(existingVegetable.version() ) // 버전 증가
-                .build();
+        // ✅ 변경 감지를 활용한 업데이트
+        vegetable.updateVegetable(
+                requestDTO.getVegetableName(),
+                requestDTO.getCalorie(),
+                requestDTO.getPrice(),
+                requestDTO.getImg()
+        );
 
-        Vegetable savedVegetable = vegetableRepository.save(updatedVegetable);
-        return toResponseDTO(savedVegetable);
+        return toResponseDTO(vegetable);
     }
 
     // 채소 상태 업데이트
+    @Transactional
     public void updateVegetableStatus(Long uid, String status) {
-        if (!vegetableRepository.existsById(uid)) {
-            throw new VegetableNotFoundException("ID: " + uid);
-        }
-        vegetableRepository.updateStatusByUid(uid, status);
+        Vegetable vegetable = vegetableRepository.findById(uid)
+                .orElseThrow(() -> new VegetableNotFoundException("ID: " + uid));
+        vegetable.setStatus(status);
     }
 
     // Vegetable -> VegetableResponseDTO 변환 메서드
     private VegetableResponseDTO toResponseDTO(Vegetable vegetable) {
         return new VegetableResponseDTO(
-                vegetable.uid(),
-                vegetable.vegetableName(),
-                vegetable.calorie(),
-                vegetable.price(),
-                vegetable.img(),
-                vegetable.status(),
-                vegetable.createdDate(),
-                vegetable.version()
+                vegetable.getUid(),
+                vegetable.getVegetableName(),
+                vegetable.getCalorie(),
+                vegetable.getPrice(),
+                vegetable.getImg(),
+                vegetable.getStatus(),
+                vegetable.getCreatedDate(),
+                vegetable.getVersion()
         );
     }
 }
