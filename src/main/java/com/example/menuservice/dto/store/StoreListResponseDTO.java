@@ -14,4 +14,3 @@ public class StoreListResponseDTO {
 
     // 생성자, 빌더 등 추가적인 메서드 구현
 }
-
