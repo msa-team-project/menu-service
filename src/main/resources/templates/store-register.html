@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.js" crossorigin="anonymous"></script>
+    <script th:src="@{/storeRegister.js}"></script>
+    <link th:href="@{/storeRegister.css}" rel="stylesheet">
+    <title>회원가입</title>
+</head>
+<body>
+
+<div class="storeRegister-container">
+    <h2 id="title">지점 입력</h2>
+    <div>
+        <div class="form-group">
+            <label for="store_name">지점이름</label>
+            <input type="text" id="store_name" placeholder="지점이름을 입력하세요" required>
+        </div>
+
+        <div class="form-group">
+            <label for="address">주소</label>
+            <input type="text" id="address" placeholder="주소를 입력하세요" required>
+        </div>
+
+        <div class="form-group">
+            <label for="postcode">우편번호</label>
+            <input type="text" id="postcode" placeholder="우편번호를 입력하세요" required>
+        </div>
+
+        <!-- 역할 선택 요소 추가 -->
+      <!--  <div class="form-group">
+            <label for="role">역할 선택</label>
+            <select id="role" required>
+                <option value="ROLE_USER">일반 사용자</option>
+                <option value="ROLE_ADMIN">관리자</option>
+            </select>
+        </div>
+      -->
+        <input id="storeRegister" type="submit" value="지점 가입">
+    </div>
+</div>
+
+</body>
+</html>
