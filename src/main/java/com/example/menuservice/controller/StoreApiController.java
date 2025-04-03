@@ -1,11 +1,14 @@
 package com.example.menuservice.controller;
 
-import com.example.menuservice.dto.StoreRequestDTO;
-import com.example.menuservice.dto.StoreResponseDTO;
+import com.example.menuservice.dto.store.StoreRequestDTO;
+import com.example.menuservice.dto.store.StoreResponseDTO;
 import com.example.menuservice.exception.StoreAlreadyExistsException;
 import com.example.menuservice.service.StoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,13 +20,16 @@ public class StoreApiController {
 
     //지점 목록 조회
     @GetMapping
-    public Iterable<StoreResponseDTO> getAllStores() {
-        return  storeService.viewStoreList();
+    public Page<StoreResponseDTO> getAllStores(
+            @PageableDefault(page = 0,size = 10)Pageable pageable
+            ) {
+        // 지점 목록 가져오기
+        return  storeService.viewStoreList(pageable);
     }
 
     //지점 uid로 지점 조회
     @GetMapping("/{uid}")
-    public StoreResponseDTO getStore(@PathVariable("uid") int uid) {
+    public StoreResponseDTO getStore(@PathVariable("uid") Long uid) {
         return storeService.viewStore(uid);
     }
 
@@ -35,18 +41,14 @@ public class StoreApiController {
 
     //지점 삭제
     @DeleteMapping("/{uid}")
-    public void deleteStore(@PathVariable("uid") int uid) {
+    public void deleteStore(@PathVariable("uid") Long uid) {
         storeService.deleteStore(uid);
     }
 
     //지점 상태 업데이트
     @PatchMapping("/{uid}")
-    public void updateStatusByUid(@PathVariable("uid") int uid, @RequestParam("status") String status) {
-        storeService.updateStatusStore(uid, status);
+    public void updateStatusByUid(@PathVariable("uid") Long uid, @RequestParam("storeStatus") String storeStatus) {
+        storeService.updateStatusStore(uid, storeStatus);
     }
-
-
-
-
 
 }

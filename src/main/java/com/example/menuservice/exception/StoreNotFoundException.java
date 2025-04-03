@@ -1,7 +1,7 @@
 package com.example.menuservice.exception;
 
 public class StoreNotFoundException extends RuntimeException {
-    public StoreNotFoundException(int uid) {
+    public StoreNotFoundException(Long uid) {
         super("Store does not exists: " + uid);
     }
 }
