@@ -3,9 +3,15 @@ package com.example.menuservice.controller;
 import com.example.menuservice.dto.BreadRequestDTO;
 import com.example.menuservice.dto.BreadResponseDTO;
 import com.example.menuservice.service.BreadService;
+import com.example.menuservice.service.FileUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -13,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class BreadApiController {
 
     private final BreadService breadService;
+    private final FileUploadService fileUploadService;
 
     // 빵 목록 조회
     @GetMapping
@@ -28,15 +35,44 @@ public class BreadApiController {
 
     // 빵 추가
     @PostMapping
-    public BreadResponseDTO addBread(@Valid @RequestBody BreadRequestDTO breadRequestDTO) {
-        return breadService.addBread(breadRequestDTO);
+    public ResponseEntity<BreadResponseDTO> addBread(
+            @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        try {
+
+            if (file != null && !file.isEmpty()) {
+                String fileUrl = fileUploadService.uploadFile(file);
+                breadRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
+            }
+
+
+            BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    // 빵 수정
     @PutMapping("/{breadName}")
-    public BreadResponseDTO updateBread(@PathVariable String breadName, @Valid @RequestBody BreadRequestDTO breadRequestDTO) {
-        return breadService.editBreadDetails(breadName, breadRequestDTO);
+    public ResponseEntity<BreadResponseDTO> updateBread(
+            @PathVariable String breadName,
+            @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        try {
+            if (file != null && !file.isEmpty()) {
+                String fileUrl = fileUploadService.uploadFile(file);
+                breadRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
+            }
+
+            BreadResponseDTO response = breadService.editBreadDetails(breadName, breadRequestDTO,file);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
+
 
     // 빵 삭제
     @DeleteMapping("/{breadName}")
@@ -44,9 +80,4 @@ public class BreadApiController {
         breadService.removeBread(breadName);
     }
 
-//    //     상태 업데이트
-//    @PatchMapping("/{uid}/status")
-//    public void updateBreadStatus(@PathVariable Long uid, @RequestParam String status) {
-//        breadService.updateBreadStatus(uid, status);
-//    }
 }

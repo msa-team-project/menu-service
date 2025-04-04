@@ -1,4 +1,4 @@
-package com.example.menuservice.controller;
+package com.example.menuservice.veiwController;
 
 import com.example.menuservice.dto.BreadResponseDTO;
 import com.example.menuservice.service.BreadService;
@@ -20,18 +20,18 @@ public class BreadViewController {
 
 
     // 업로드 페이지로 이동
-    @GetMapping("/")
+    @GetMapping("/breads/admin")
     public String index(Model model) {
         List<String> imageUrls = fileUploadService.getUploadedImages();
         model.addAttribute("imageUrls", imageUrls);
-        return "upload";  // Thymeleaf 템플릿 (upload.html)
+        return "breadAdmin";  // Thymeleaf 템플릿
     }
 
     // 빵 목록 조회 페이지
     @GetMapping("/breads/list")
     public String viewBreadList(Model model) {
         model.addAttribute("breads", breadService.viewBreadList());
-        return "breads"; // ✅ breadList.html 파일로 이동
+        return "breadList"; // ✅ breadList.html 파일로 이동
     }
 
 

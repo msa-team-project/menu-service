@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script th:src="@{/breadEdit.js}"></script>
-  <link th:href="@{/breadEdit.css}" rel="stylesheet">
+  <script th:src="@{/js/breadEdit.js}"></script>
+  <link th:href="@{/css/breadEdit.css}" rel="stylesheet">
   <title>빵 정보 수정</title>
 </head>
 <body>
@@ -32,8 +32,8 @@
     <div class="form-group">
       <label for="status">상태</label>
       <select id="status" name="status">
-        <option value="ACTIVE" th:selected="${bread.status == 'ACTIVE'}">활성</option>
-        <option value="DELETED" th:selected="${bread.status == 'DELETED'}">비활성</option>
+        <option value="active" th:selected="${bread.status == 'ACTIVE'}">활성</option>
+        <option value="deleted" th:selected="${bread.status == 'DELETED'}">비활성</option>
       </select>
     </div>
 

@@ -10,7 +10,9 @@ import com.example.menuservice.repository.BreadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BreadService {
     private final BreadRepository breadRepository;
+    private final FileUploadService fileUploadService;
 
     // 빵 목록 조회
     public List<BreadResponseDTO> viewBreadList() {
@@ -35,55 +38,76 @@ public class BreadService {
 
     // 빵 추가
     @Transactional
-    public BreadResponseDTO addBread(BreadRequestDTO breadRequestDTO) {
-        if (breadRepository.existsByBreadName(breadRequestDTO.getBreadName())) {
-            throw new BreadAlreadyExistsException(breadRequestDTO.getBreadName());
-        }
+    public BreadResponseDTO addBread(BreadRequestDTO breadRequestDTO, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
-        // ✅ 1. 상태 값 검증 (기본값: ACTIVE)
-        BreadStatus status;
         try {
-            status = BreadStatus.valueOf(breadRequestDTO.getStatus().toUpperCase()); // 대소문자 구분 없이 처리
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("잘못된 상태 값입니다: " + breadRequestDTO.getStatus());
+            if (breadRepository.existsByBreadName(breadRequestDTO.getBreadName())) {
+                throw new BreadAlreadyExistsException(breadRequestDTO.getBreadName());
+            }
+
+            BreadStatus status = BreadStatus.valueOf(breadRequestDTO.getStatus().toUpperCase());
+
+            if (file != null && !file.isEmpty()) {
+                fileUrl = fileUploadService.uploadFile(file);
+            }
+
+            Bread bread = Bread.builder()
+                    .breadName(breadRequestDTO.getBreadName())
+                    .calorie(breadRequestDTO.getCalorie())
+                    .price(breadRequestDTO.getPrice())
+                    .status(status.name())
+                    .img(fileUrl)
+                    .build();
+
+            return toResponseDTO(breadRepository.save(bread));
+        } catch (Exception e) {
+            if (fileUrl != null) {
+                fileUploadService.deleteFile(fileUrl);
+            }
+            throw e;
         }
-
-        // ✅ 2. 빵 저장
-        Bread bread = Bread.builder()
-                .breadName(breadRequestDTO.getBreadName())
-                .calorie(breadRequestDTO.getCalorie())
-                .price(breadRequestDTO.getPrice())
-                .img(breadRequestDTO.getImg())
-                .status(String.valueOf(status)) // 유효한 상태 값 저장
-                .build();
-
-        return toResponseDTO(breadRepository.save(bread));
     }
-
 
     // 빵 삭제
     @Transactional
     public void removeBread(String breadName) {
         Bread bread = breadRepository.findByBreadName(breadName)
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
-        breadRepository.delete(bread);
+        bread.setStatus(BreadStatus.DELETED.name());
+        breadRepository.save(bread);
     }
 
     // 빵 수정
     @Transactional
-    public BreadResponseDTO editBreadDetails(String breadName, BreadRequestDTO breadRequestDTO) {
-        Bread existingBread = breadRepository.findByBreadName(breadName)
+    public BreadResponseDTO editBreadDetails(String breadName, BreadRequestDTO breadRequestDTO, MultipartFile file) throws IOException {
+        Bread bread = breadRepository.findByBreadName(breadName)
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
 
-        existingBread.updateBread(
-                breadRequestDTO.getBreadName(),
-                breadRequestDTO.getCalorie(),
-                breadRequestDTO.getPrice(),
-                breadRequestDTO.getImg(),
-                breadRequestDTO.getStatus()
-        );
+        String fileUrl = bread.getImg();
+        try {
+            if (file != null && !file.isEmpty()) {
+                if (fileUrl != null) {
+                    fileUploadService.deleteFile(fileUrl);
+                }
+                fileUrl = fileUploadService.uploadFile(file);
+            }
 
-        return toResponseDTO(existingBread);
+            bread.updateBread(
+                    breadRequestDTO.getBreadName(),
+                    breadRequestDTO.getCalorie(),
+                    breadRequestDTO.getPrice(),
+                    fileUrl,
+                    breadRequestDTO.getStatus()
+            );
+
+            return toResponseDTO(bread);
+        } catch (Exception e) {
+            if (fileUrl != null) {
+                fileUploadService.deleteFile(fileUrl);
+            }
+            throw e;
+        }
     }
 
     // 빵 상태 업데이트

@@ -68,12 +68,14 @@ public class FileUploadService {
     }
 
     // 파일 삭제 메서드
-    public void deleteFile(String fileName) {
-        String filePath = "uploads/" + fileName;
+    public void deleteFile(String fileUrl) {
+        // ✅ URL에서 파일 이름만 추출 (Key 값 변환)
+        String fileKey = fileUrl.replace("https://" + bucketName + ".s3.amazonaws.com/", "");
+
         s3Client.deleteObject(
                 DeleteObjectRequest.builder()
                         .bucket(bucketName)
-                        .key(filePath)
+                        .key(fileKey) // ✅ S3 내부의 Key 값만 전달
                         .build()
         );
     }

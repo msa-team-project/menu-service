@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco' // ✅ JaCoCo 플러그인 적용
 }
 
 group = 'com.example'
@@ -52,4 +53,24 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+
+
+jacoco {
+    toolVersion = "0.8.10" // 최신 버전 사용
+}
+
+test {
+    useJUnitPlatform() // JUnit 5 사용 시 필요
+    finalizedBy jacocoTestReport // 테스트가 끝난 후 JaCoCo 실행
+}
+
+jacocoTestReport {
+    dependsOn test // 테스트 후 실행
+    reports {
+        html.required = true  // HTML 리포트 생성
+        xml.required = true   // XML 리포트 생성 (CI/CD에서 사용 가능)
+        csv.required = false  // CSV 리포트는 비활성화
+    }
 }
