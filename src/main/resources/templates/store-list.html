@@ -7,7 +7,7 @@
     <script th:src="@{/common.js}"></script>
     <script th:src="@{/storeList.js}"></script>
     <link th:href="@{/storeList.css}" rel="stylesheet">
-    <title>게시판</title>
+    <title>지점 목록</title>
 </head>
 <body>
 
@@ -16,7 +16,7 @@
     <input id="hiddenStoreName" type="hidden">
 
     <h1 id="welcome-message"></h1>
-    <a th:href="@{/write}" class="btn">글쓰기</a>
+    <a th:href="@{/store/register}" class="btn">지점 등록</a>
     <button onclick="logout();" class="btn logout-btn logout-btn-position">로그아웃</button>
 
     <!-- 게시판 영역 -->
@@ -42,8 +42,9 @@
 
     <!-- 페이징 영역 -->
     <div id="pagination">
+        <button id="firstPage" class="btn">처음</button>
         <button id="prevPage" class="btn" disabled>이전</button>
-        <span id="pageInfo">1</span>
+        <span id="pageNumbers"></span>
         <button id="nextPage" class="btn">다음</button>
     </div>
 </div>

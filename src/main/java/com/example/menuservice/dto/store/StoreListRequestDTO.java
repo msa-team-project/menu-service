@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class StoreListRequestDTO {
-    private Long lastUid;
     private int limit;
+    private Long lastUid;
+
 }

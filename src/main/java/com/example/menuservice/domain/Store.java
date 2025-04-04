@@ -9,11 +9,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
 @Getter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -33,7 +35,7 @@ public class Store{
 
         @NotNull(message = "the postcode must be defined.")
         @Column(name = "postcode")
-        private int storePostcode;
+        private String storePostcode;
 
         @NotBlank(message = "the status must be defined.")
         @Column(name = "status")

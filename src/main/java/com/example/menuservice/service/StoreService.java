@@ -22,16 +22,17 @@ public class StoreService {
 
     //지점 목록 조회(커서방식)
     @Transactional
-    public StoreListResponseDTO getStoresByCursor(Long lastUid, int limit) {
+    public StoreListResponseDTO getStoresByCursor(int limit, Long lastUid) {
         List<Store> stores;
 
         //처음 요청일 때(lastUid가 null인 경우
         if (lastUid == null) {
             stores = storeRepository.findFirstByOrderByUidAsc(limit);
-            return null;
+
         } else {
             //lastUid 이후로 데이터 가져오기
-            stores = storeRepository.findByUidGreaterThanOrderByUidAsc(lastUid, limit);
+            stores = storeRepository.findByUidGreaterThanOrderByUidAsc(lastUid,limit);
+        }
 
             //StoreResponseDTO로 변환
             List<StoreResponseDTO> storeResponseDTOS = stores.stream()
@@ -44,12 +45,14 @@ public class StoreService {
             //nextCursor 계산:마지막 요소의 uid를 nextCursor로 설정
             Long nextCursor = stores.isEmpty() ? null : stores.get(stores.size() - 1).getUid();
 
+
             return StoreListResponseDTO.builder()
                     .storeList(storeResponseDTOS)
                     .lastPage(lastPage)
                     .nextCursor(nextCursor)
                     .build();
-        }
+
+
     }
 
     // 지점 이름으로 지점 조회
@@ -92,22 +95,25 @@ public class StoreService {
                 .build();
         Store saveStore = storeRepository.save(updateStore);
         return saveStore.toStoreResponseDTO();
-    }
 
-    //지점 상태 변경
-    public void updateStatusStore (Long uid, String status) throws StoreNotFoundException {
-        if (!storeRepository.existsById(uid)) {
-            throw new StoreNotFoundException(uid);
-        }
-        storeRepository.updateStatusByUid(uid, status);
     }
-
-    //지점 삭제
-    public void deleteStore (Long uid){
-        if (!storeRepository.existsById(uid)) {
-            throw new StoreNotFoundException(uid);
-        }
-        storeRepository.deleteByUid(uid);
-    }
-
 }
+
+
+//    //지점 상태 변경
+//    public void updateStatusStore (Long uid, String status) throws StoreNotFoundException {
+//        if (!storeRepository.existsById(uid)) {
+//            throw new StoreNotFoundException(uid);
+//        }
+//        storeRepository.updateStatusByUid(uid, status);
+//    }
+//
+//    //지점 삭제
+//    public void deleteStore (Long uid){
+//        if (!storeRepository.existsById(uid)) {
+//            throw new StoreNotFoundException(uid);
+//        }
+//        storeRepository.deleteByUid(uid);
+//    }
+
+

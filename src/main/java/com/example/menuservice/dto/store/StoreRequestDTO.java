@@ -7,6 +7,6 @@ import lombok.Getter;
 public class StoreRequestDTO {
     private String storeName;
     private String storeAddress;
-    private int storePostcode;
+    private String storePostcode;
     private String storeStatus;
 }
