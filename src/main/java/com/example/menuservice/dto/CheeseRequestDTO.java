@@ -3,15 +3,15 @@ package com.example.menuservice.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class CheeseRequestDTO {
 
     @NotBlank(message = "The cheese name must be defined.")
@@ -24,8 +24,11 @@ public class CheeseRequestDTO {
     @Positive(message = "The price must be greater than zero.")
     private int price;
 
-    @NotBlank(message = "The image URL must be defined.")
+
     private String img;
 
     private String status;
+    // 이미지 파일과 URL을 함께 관리
+    private MultipartFile file; // 업로드할 이미지 파일
+
 }

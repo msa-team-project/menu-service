@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.js" crossorigin="anonymous"></script>
 
-    <script th:src="@{/breadWrite.js}"></script>
-    <link th:href="@{/breadWrite.css}" rel="stylesheet">
-    <title>빵 정보 입력</title>
+    <script th:src="@{/js/vegetableAdmin.js}"></script>
+    <link th:href="@{/css/vegetableAdmin.css}" rel="stylesheet">
+    <title>야채 정보 입력</title>
 </head>
 <body>
 <div class="container">
-    <h1>빵 정보 입력</h1>
+    <h1>야채 정보 입력</h1>
 
-    <form id="breadForm" enctype="multipart/form-data">
+    <form id="vegetableForm" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="breadName">빵 이름</label>
-            <input type="text" id="breadName" name="breadName" placeholder="빵 이름을 입력하세요" required>
+            <label for="vegetableName">야채 이름</label>
+            <input type="text" id="vegetableName" name="vegetableName" placeholder="빵 이름을 입력하세요" required>
         </div>
 
         <div class="form-group">
@@ -32,8 +32,9 @@
         <!-- 이미지 파일 업로드 -->
         <div class="form-group">
             <label for="img">이미지 업로드</label>
-            <input type="file" id="img" name="img" accept="image/*" required>
+            <input type="file" id="img" name="file" accept="image/*" required>
         </div>
+
 
         <!-- ✅ 업로드 후 URL을 저장할 hidden input -->
         <input type="hidden" id="imgUrl" name="imgUrl">
@@ -48,7 +49,7 @@
 
         <div class="form-actions">
             <button type="button" class="btn" id="submitBtn">등록하기</button>
-            <button type="button" class="btn cancel-btn" onclick="location.href='/breads/list'">목록으로 가기</button>
+            <button type="button" class="btn cancel-btn" onclick="location.href='/vegetables/list'">목록으로 가기</button>
         </div>
     </form>
 </div>

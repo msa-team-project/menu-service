@@ -3,9 +3,14 @@ package com.example.menuservice.controller;
 import com.example.menuservice.dto.VegetableRequestDTO;
 import com.example.menuservice.dto.VegetableResponseDTO;
 import com.example.menuservice.service.VegetableService;
+import com.example.menuservice.service.FileUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class VegetableApiController {
 
     private final VegetableService vegetableService;
+    private final FileUploadService fileUploadService;
 
     // 채소 목록 조회
     @GetMapping
@@ -20,7 +26,7 @@ public class VegetableApiController {
         return vegetableService.viewVegetableList();
     }
 
-    // 채소 이름으로 채소 조회
+    // 채소 조회
     @GetMapping("/{vegetableName}")
     public VegetableResponseDTO getVegetable(@PathVariable String vegetableName) {
         return vegetableService.viewVegetable(vegetableName);
@@ -28,25 +34,46 @@ public class VegetableApiController {
 
     // 채소 추가
     @PostMapping
-    public VegetableResponseDTO addVegetable(@Valid @RequestBody VegetableRequestDTO vegetableRequestDTO) {
-        return vegetableService.addVegetable(vegetableRequestDTO);
+    public ResponseEntity<VegetableResponseDTO> addVegetable(
+            @Valid @RequestPart("vegetable") VegetableRequestDTO vegetableRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        try {
+            if (file != null && !file.isEmpty()) {
+                String fileUrl = fileUploadService.uploadFile(file);
+                vegetableRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
+            }
+
+            VegetableResponseDTO response = vegetableService.addVegetable(vegetableRequestDTO,file);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // 채소 수정
     @PutMapping("/{vegetableName}")
-    public VegetableResponseDTO updateVegetable(@PathVariable String vegetableName, @Valid @RequestBody VegetableRequestDTO vegetableRequestDTO) {
-        return vegetableService.editVegetableDetails(vegetableName, vegetableRequestDTO);
+    public ResponseEntity<VegetableResponseDTO> updateVegetable(
+            @PathVariable String vegetableName,
+            @Valid @RequestPart("vegetable") VegetableRequestDTO vegetableRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        try {
+            if (file != null && !file.isEmpty()) {
+                String fileUrl = fileUploadService.uploadFile(file);
+                vegetableRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
+            }
+
+            VegetableResponseDTO response = vegetableService.editVegetableDetails(vegetableName, vegetableRequestDTO,file);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // 채소 삭제
     @DeleteMapping("/{vegetableName}")
     public void deleteVegetable(@PathVariable String vegetableName) {
         vegetableService.removeVegetable(vegetableName);
-    }
-
-    //     상태 업데이트
-    @PatchMapping("/{uid}/status")
-    public void updateVegetableStatus(@PathVariable Long uid, @RequestParam String status) {
-       vegetableService.updateVegetableStatus(uid, status);
     }
 }

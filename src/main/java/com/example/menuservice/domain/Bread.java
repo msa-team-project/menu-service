@@ -59,6 +59,7 @@ public class Bread {
                 this.price = price;
                 this.img = img;
                 this.status = status;
+
         }
 
 }
