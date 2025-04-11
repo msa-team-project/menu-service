@@ -38,21 +38,15 @@ public class BreadApiController {
     public ResponseEntity<BreadResponseDTO> addBread(
             @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
-
         try {
-
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                breadRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-
+            // ✅ 파일은 업로드하지 않고, Service에 그대로 넘긴다
             BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
         }
     }
+
 
     @PutMapping("/{breadName}")
     public ResponseEntity<BreadResponseDTO> updateBread(
@@ -61,17 +55,15 @@ public class BreadApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                breadRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            BreadResponseDTO response = breadService.editBreadDetails(breadName, breadRequestDTO,file);
+            // ❌ Controller에서는 업로드 X
+            // ✅ 파일만 그대로 전달
+            BreadResponseDTO response = breadService.editBreadDetails(breadName, breadRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
         }
     }
+
 
 
     // 빵 삭제

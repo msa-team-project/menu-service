@@ -51,11 +51,9 @@ public class MenuRequestDTO {
     private Long sauce2;
     private Long sauce3;
 
-
     private String img;
 
     private String status;
 
-    // 이미지 파일과 URL을 함께 관리
-    private MultipartFile file; // 업로드할 이미지 파일
+    private MultipartFile file;
 }

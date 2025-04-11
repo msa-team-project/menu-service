@@ -1,4 +1,7 @@
 $(document).ready(function () {
+    // checkToken();
+    // setupAjax();
+
     $("#submitBtn").on("click", function () {
         let fileInput = $("#img")[0].files[0];
 
@@ -17,11 +20,10 @@ $(document).ready(function () {
             status: $("#status").val() === "active" ? "ACTIVE" : "DELETED"
         };
 
-        // ✅ JSON 데이터를 Blob으로 변환하여 FormData에 추가 (올바른 Content-Type 설정)
+        // ✅ JSON 데이터를 Blob으로 변환하여 FormData에 추가
         let jsonBlob = new Blob([JSON.stringify(materialData)], { type: "application/json" });
-        formData.append("material", jsonBlob); // 백엔드에서 @RequestPart("bread")와 일치
+        formData.append("material", jsonBlob); // 백엔드에서 @RequestPart("material")와 일치
 
-        // ✅ Ajax 요청
         $.ajax({
             url: "/materials",
             type: "POST",
@@ -30,12 +32,12 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             success: function () {
-                alert("빵 정보가 등록되었습니다!");
-                // window.location.href = "/materials/list";
+                alert("재료 정보가 등록되었습니다!");
+                window.location.href = "/materials/list"; // 필요 없으면 주석 처리해도 됨
             },
             error: function (xhr) {
                 console.error("Error:", xhr.responseText);
-                alert("빵 정보 등록 중 오류가 발생했습니다.");
+                alert("재료 정보 등록 중 오류가 발생했습니다.");
             }
         });
     });

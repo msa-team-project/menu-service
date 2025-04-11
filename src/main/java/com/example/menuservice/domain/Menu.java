@@ -21,7 +21,7 @@ import java.time.Instant;
 public class Menu {
 
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL AUTO_INCREMENT 설정
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long uid;
 
         @NotBlank(message = "The menu name must be defined.")
@@ -37,37 +37,69 @@ public class Menu {
         @Column(nullable = false)
         private Double calorie;
 
-        @NotNull(message = "The bread must be defined.")
-        @Column(nullable = false)
-        private Long bread;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "bread_id", nullable = false)
+        private Bread bread;
 
-        @NotNull(message = "The material 1 must be defined.")
-        @Column(nullable = false)
-        private Long material1;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "material1_id", nullable = false)
+        private Material material1;
 
-        private Long material2;
-        private Long material3;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "material2_id" ,nullable = true)
+        private Material material2;
 
-        private Long cheese;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "material3_id",nullable = true)
+        private Material material3;
 
-        @NotNull(message = "At least one vegetable must be defined.")
-        @Column(nullable = false)
-        private Long vegetable1;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "cheese_id",nullable = false)
+        private Cheese cheese;
 
-        private Long vegetable2;
-        private Long vegetable3;
-        private Long vegetable4;
-        private Long vegetable5;
-        private Long vegetable6;
-        private Long vegetable7;
-        private Long vegetable8;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable1_id", nullable = false)
+        private Vegetable vegetable1;
 
-        @NotNull(message = "At least one sauce must be defined.")
-        @Column(nullable = false)
-        private Long sauce1;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable2_id",nullable = true)
+        private Vegetable vegetable2;
 
-        private Long sauce2;
-        private Long sauce3;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable3_id",nullable = true)
+        private Vegetable vegetable3;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable4_id",nullable = true)
+        private Vegetable vegetable4;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable5_id",nullable = true)
+        private Vegetable vegetable5;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable6_id",nullable = true)
+        private Vegetable vegetable6;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable7_id",nullable = true)
+        private Vegetable vegetable7;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "vegetable8_id",nullable = true)
+        private Vegetable vegetable8;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "sauce1_id", nullable = false)
+        private Sauce sauce1;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "sauce2_id",nullable = true)
+        private Sauce sauce2;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "sauce3_id",nullable = true)
+        private Sauce sauce3;
 
         @NotBlank(message = "The image URL must be defined.")
         @Column(nullable = false)
@@ -83,12 +115,16 @@ public class Menu {
 
         @Version
         private int version;
-        // ✅ 메뉴 정보 업데이트 메서드 추가
-        public void updateMenu(String menuName, Long price, double calorie, Long bread,
-                               Long material1, Long material2, Long material3, Long cheese,
-                               Long vegetable1, Long vegetable2, Long vegetable3, Long vegetable4,
-                               Long vegetable5, Long vegetable6, Long vegetable7, Long vegetable8,
-                               Long sauce1, Long sauce2, Long sauce3, String img) {
+
+        public void updateMenu(String menuName, Long price, double calorie, Bread bread,
+                               Material material1, Material material2, Material material3,
+                               Cheese cheese,
+                               Vegetable vegetable1, Vegetable vegetable2, Vegetable vegetable3,
+                               Vegetable vegetable4, Vegetable vegetable5, Vegetable vegetable6,
+                               Vegetable vegetable7, Vegetable vegetable8,
+                               Sauce sauce1, Sauce sauce2, Sauce sauce3,
+                               String img, String status) {
+
                 this.menuName = menuName;
                 this.price = price;
                 this.calorie = calorie;
@@ -109,5 +145,6 @@ public class Menu {
                 this.sauce2 = sauce2;
                 this.sauce3 = sauce3;
                 this.img = img;
+                this.status = status;
         }
 }

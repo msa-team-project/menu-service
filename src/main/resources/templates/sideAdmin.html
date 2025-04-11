@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://code.jquery.com/jquery-3.7.1.js" crossorigin="anonymous"></script>
-
+  <script th:src="@{/js/common.js}"></script>
   <script th:src="@{/js/sideAdmin.js}"></script>
-  <link th:href="@{/css/sideAdmin.css}" rel="stylesheet">
-  <title>치즈 정보 입력</title>
+  <link th:href="@{/css/commonAdmin.css}" rel="stylesheet">
+  <title>사이드 정보 입력</title>
 </head>
 <body>
 <div class="container">
-  <h1>치즈 정보 입력</h1>
+  <h1>사이드 정보 입력</h1>
 
   <form id="sideForm" enctype="multipart/form-data">
     <div class="form-group">
-      <label for="sideName">치즈 이름</label>
+      <label for="sideName">사이드 이름</label>
       <input type="text" id="sideName" name="sideName" placeholder="빵 이름을 입력하세요" required>
     </div>
 
@@ -49,7 +49,8 @@
 
     <div class="form-actions">
       <button type="button" class="btn" id="submitBtn">등록하기</button>
-      <button type="button" class="btn cancel-btn" onclick="location.href='/breads/list'">목록으로 가기</button>
+      <button type="button" class="btn cancel-btn" onclick="location.href='/sides/list'">목록으로 가기</button>
+      <button type="button" class="btn main-btn" onclick="location.href='/admin'">메인으로 가기</button>
     </div>
   </form>
 </div>

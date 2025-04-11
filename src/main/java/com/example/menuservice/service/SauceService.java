@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.status.SauceStatus;
 import com.example.menuservice.domain.Sauce;
 import com.example.menuservice.dto.SauceRequestDTO;
 import com.example.menuservice.dto.SauceResponseDTO;
@@ -28,7 +29,7 @@ public class SauceService {
                 .collect(Collectors.toList());
     }
 
-    // 소스 이름으로 조회
+    // 소스 이름으로 소스 조회
     public SauceResponseDTO viewSauce(String sauceName) {
         Sauce sauce = sauceRepository.findBySauceName(sauceName)
                 .orElseThrow(() -> new SauceNotFoundException(sauceName));
@@ -37,69 +38,54 @@ public class SauceService {
 
     // 소스 추가
     @Transactional
-    public SauceResponseDTO addSauce(SauceRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public SauceResponseDTO addSauce(SauceRequestDTO sauceRequestDTO, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ✅ 1. 중복 체크
-            if (sauceRepository.existsBySauceName(requestDTO.getSauceName())) {
-                throw new SauceAlreadyExistsException(requestDTO.getSauceName());
+            if (sauceRepository.existsBySauceName(sauceRequestDTO.getSauceName())) {
+                throw new SauceAlreadyExistsException(sauceRequestDTO.getSauceName());
             }
 
-            // ✅ 2. S3에 이미지 업로드 (DB 저장 전에 수행)
+            SauceStatus status = SauceStatus.valueOf(sauceRequestDTO.getStatus().toUpperCase());
+
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 3. 소스 정보 저장
             Sauce sauce = Sauce.builder()
-                    .sauceName(requestDTO.getSauceName())
-                    .calorie(requestDTO.getCalorie())
-                    .price(requestDTO.getPrice())
+                    .sauceName(sauceRequestDTO.getSauceName())
+                    .calorie(sauceRequestDTO.getCalorie())
+                    .price(sauceRequestDTO.getPrice())
+                    .status(status.name())
                     .img(fileUrl)
-                    .status("active")
                     .build();
 
             return toResponseDTO(sauceRepository.save(sauce));
-
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                    System.out.println("🚨 저장 실패로 인해 S3 파일 삭제 완료: " + fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
-
-            throw e; // 예외 다시 던져서 트랜잭션 롤백
+            throw e;
         }
     }
 
-    // 소스 삭제 (상태를 "DELETED"로 변경)
+    // 소스 삭제
     @Transactional
     public void removeSauce(String sauceName) {
         Sauce sauce = sauceRepository.findBySauceName(sauceName)
                 .orElseThrow(() -> new SauceNotFoundException(sauceName));
-
-        // ✅ 상태를 "DELETED"로 변경
-        sauce.setStatus("DELETED");
-
-        // ✅ 변경된 상태 저장
+        sauce.setStatus(SauceStatus.DELETED.name());
         sauceRepository.save(sauce);
     }
 
     // 소스 수정
     @Transactional
-    public SauceResponseDTO editSauceDetails(String sauceName, SauceRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public SauceResponseDTO editSauceDetails(String sauceName, SauceRequestDTO sauceRequestDTO, MultipartFile file) throws IOException {
         Sauce sauce = sauceRepository.findBySauceName(sauceName)
                 .orElseThrow(() -> new SauceNotFoundException(sauceName));
 
         String fileUrl = sauce.getImg();
-
         try {
-            // ✅ 새 이미지 업로드 시 기존 이미지 삭제
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -107,23 +93,18 @@ public class SauceService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 변경 감지로 자동 업데이트
             sauce.updateSauce(
-                    requestDTO.getSauceName(),
-                    requestDTO.getCalorie(),
-                    requestDTO.getPrice(),
-                    fileUrl // 새 이미지 URL 반영
+                    sauceRequestDTO.getSauceName(),
+                    sauceRequestDTO.getCalorie(),
+                    sauceRequestDTO.getPrice(),
+                    fileUrl,
+                    sauceRequestDTO.getStatus()
             );
 
             return toResponseDTO(sauce);
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 새 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
@@ -144,8 +125,8 @@ public class SauceService {
                 sauce.getSauceName(),
                 sauce.getCalorie(),
                 sauce.getPrice(),
-                sauce.getStatus(),
                 sauce.getImg(),
+                sauce.getStatus(),
                 sauce.getCreatedDate(),
                 sauce.getVersion()
         );

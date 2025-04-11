@@ -1,4 +1,4 @@
-package com.example.menuservice;
+package com.example.menuservice.status;
 
 
 public enum BreadStatus {

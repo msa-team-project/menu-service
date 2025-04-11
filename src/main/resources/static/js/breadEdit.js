@@ -1,4 +1,7 @@
 $(document).ready(function () {
+    // checkToken();
+    // setupAjax();
+
     $("#updateBtn").on("click", function () {
         let fileInput = $("#img")[0].files[0];
 
@@ -19,7 +22,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: "/breads/" + breadData.breadName,
+            url: "/breads/" + encodeURIComponent(breadData.breadName),
             type: "PUT",
             data: formData,
             enctype: "multipart/form-data",

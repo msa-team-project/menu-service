@@ -39,12 +39,8 @@ public class SideApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                sideRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            SideResponseDTO response = sideService.addSide(sideRequestDTO,file);
+            // ✅ 업로드는 Service에서 처리
+            SideResponseDTO response = sideService.addSide(sideRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -59,12 +55,8 @@ public class SideApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                sideRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            SideResponseDTO response = sideService.editSideDetails(sideName, sideRequestDTO,file);
+            // ✅ 업로드는 Service에서 처리
+            SideResponseDTO response = sideService.editSideDetails(sideName, sideRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();

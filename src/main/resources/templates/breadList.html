@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script th:src="@{/js/common.js}"></script>
     <script th:src="@{/js/breadList.js}"></script>
-    <link th:href="@{/css/breadList.css}" rel="stylesheet">
+    <link th:href="@{/css/commonList.css}" rel="stylesheet">
 
     <title>빵 목록</title>
 </head>
@@ -32,7 +33,7 @@
         <td><img th:src="${bread.img}" alt="빵 이미지" width="50"></td>
         <td th:text="${bread.status}"></td>
         <td>
-            <a th:href="@{/breads/edit(breadName=${bread.breadName})}">수정</a>
+            <a th:href="@{/breads/edit/{breadName}(breadName=${bread.breadName})}">수정</a>
 
         </td>
         <td>
@@ -46,5 +47,6 @@
 </table>
 <br>
 <button onclick="location.href='/breads/admin'">새 빵 등록</button>
+<button onclick="location.href='/admin'" style="margin-left: 10px;">메인으로 가기</button>
 </body>
 </html>

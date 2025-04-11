@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.status.SideStatus;
 import com.example.menuservice.domain.Side;
 import com.example.menuservice.dto.SideRequestDTO;
 import com.example.menuservice.dto.SideResponseDTO;
@@ -28,7 +29,7 @@ public class SideService {
                 .collect(Collectors.toList());
     }
 
-    // 사이드 이름으로 조회
+    // 사이드 이름으로 사이드 조회
     public SideResponseDTO viewSide(String sideName) {
         Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
@@ -37,68 +38,54 @@ public class SideService {
 
     // 사이드 추가
     @Transactional
-    public SideResponseDTO addSide(SideRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public SideResponseDTO addSide(SideRequestDTO sideRequestDTO, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ✅ 1. 중복 체크
-            if (sideRepository.existsBySideName(requestDTO.getSideName())) {
-                throw new SideAlreadyExistsException(requestDTO.getSideName());
+            if (sideRepository.existsBySideName(sideRequestDTO.getSideName())) {
+                throw new SideAlreadyExistsException(sideRequestDTO.getSideName());
             }
 
-            // ✅ 2. S3에 이미지 업로드 (DB 저장 전에 수행)
+            SideStatus status = SideStatus.valueOf(sideRequestDTO.getStatus().toUpperCase());
+
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 3. 사이드 정보 저장
             Side side = Side.builder()
-                    .sideName(requestDTO.getSideName())
-                    .calorie(requestDTO.getCalorie())
-                    .price(requestDTO.getPrice())
+                    .sideName(sideRequestDTO.getSideName())
+                    .calorie(sideRequestDTO.getCalorie())
+                    .price(sideRequestDTO.getPrice())
+                    .status(status.name())
                     .img(fileUrl)
-                    .status("active")
                     .build();
 
             return toResponseDTO(sideRepository.save(side));
-
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
-
-            throw e; // 예외 다시 던져서 트랜잭션 롤백
+            throw e;
         }
     }
 
-    // 사이드 삭제 (상태를 "DELETED"로 변경)
+    // 사이드 삭제
     @Transactional
     public void removeSide(String sideName) {
         Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
-
-        // ✅ 상태를 "DELETED"로 변경
-        side.setStatus("DELETED");
-
-        // ✅ 변경된 상태 저장
+        side.setStatus(SideStatus.DELETED.name());
         sideRepository.save(side);
     }
 
     // 사이드 수정
     @Transactional
-    public SideResponseDTO editSideDetails(String sideName, SideRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public SideResponseDTO editSideDetails(String sideName, SideRequestDTO sideRequestDTO, MultipartFile file) throws IOException {
         Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
 
         String fileUrl = side.getImg();
-
         try {
-            // ✅ 새 이미지 업로드 시 기존 이미지 삭제
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -106,23 +93,18 @@ public class SideService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 변경 감지로 자동 업데이트
             side.updateSide(
-                    requestDTO.getSideName(),
-                    requestDTO.getCalorie(),
-                    requestDTO.getPrice(),
-                    fileUrl // 새 이미지 URL 반영
+                    sideRequestDTO.getSideName(),
+                    sideRequestDTO.getCalorie(),
+                    sideRequestDTO.getPrice(),
+                    fileUrl,
+                    sideRequestDTO.getStatus()
             );
 
             return toResponseDTO(side);
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 새 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
@@ -143,8 +125,8 @@ public class SideService {
                 side.getSideName(),
                 side.getCalorie(),
                 side.getPrice(),
-                side.getStatus(),
                 side.getImg(),
+                side.getStatus(),
                 side.getCreatedDate(),
                 side.getVersion()
         );

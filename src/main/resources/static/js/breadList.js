@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    // checkToken();
+    // setupAjax();
     // 빵 목록 불러오기
     function loadBreads() {
         $.ajax({

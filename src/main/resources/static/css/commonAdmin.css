@@ -105,3 +105,10 @@ select {
 .update-status-btn:hover {
     background-color: #218838;
 }
+
+.main-btn {
+    background-color: #6c757d;
+    color: white;
+    margin-left: 10px;
+}
+

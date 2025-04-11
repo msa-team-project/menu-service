@@ -1,6 +1,6 @@
 package com.example.menuservice.service;
 
-import com.example.menuservice.BreadStatus;
+import com.example.menuservice.status.BreadStatus;
 import com.example.menuservice.domain.Bread;
 import com.example.menuservice.dto.BreadRequestDTO;
 import com.example.menuservice.dto.BreadResponseDTO;

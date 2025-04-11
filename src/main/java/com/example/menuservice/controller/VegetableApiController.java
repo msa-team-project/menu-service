@@ -39,12 +39,7 @@ public class VegetableApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                vegetableRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            VegetableResponseDTO response = vegetableService.addVegetable(vegetableRequestDTO,file);
+            VegetableResponseDTO response = vegetableService.addVegetable(vegetableRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -59,12 +54,7 @@ public class VegetableApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                vegetableRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            VegetableResponseDTO response = vegetableService.editVegetableDetails(vegetableName, vegetableRequestDTO,file);
+            VegetableResponseDTO response = vegetableService.editVegetableDetails(vegetableName, vegetableRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();

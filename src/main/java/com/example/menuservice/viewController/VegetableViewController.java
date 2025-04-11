@@ -13,7 +13,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-public class vegetableViewController {
+public class VegetableViewController {
 
     private final VegetableService vegetableService;
     private final FileUploadService fileUploadService;

@@ -38,11 +38,8 @@ public class CheeseApiController {
             @Valid @RequestPart("cheese") CheeseRequestDTO cheeseRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                cheeseRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-            CheeseResponseDTO response = cheeseService.addCheese(cheeseRequestDTO,file);
+            // ❌ 파일 업로드는 Service에서
+            CheeseResponseDTO response = cheeseService.addCheese(cheeseRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -53,14 +50,11 @@ public class CheeseApiController {
     @PutMapping("/{cheeseName}")
     public ResponseEntity<CheeseResponseDTO> updateCheese(
             @PathVariable String cheeseName,
-            @Valid @RequestPart(name = "cheese", required = false) CheeseRequestDTO cheeseRequestDTO,
+            @Valid @RequestPart("cheese") CheeseRequestDTO cheeseRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                cheeseRequestDTO.setImg(fileUrl);
-            }
-            CheeseResponseDTO response = cheeseService.editCheeseDetails(cheeseName, cheeseRequestDTO,file);
+            // ❌ 파일 업로드는 Service에서
+            CheeseResponseDTO response = cheeseService.editCheeseDetails(cheeseName, cheeseRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
