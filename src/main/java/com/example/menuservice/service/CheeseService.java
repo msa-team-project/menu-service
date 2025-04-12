@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.status.CheeseStatus;
 import com.example.menuservice.domain.Cheese;
 import com.example.menuservice.dto.CheeseRequestDTO;
 import com.example.menuservice.dto.CheeseResponseDTO;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CheeseService {
+
     private final CheeseRepository cheeseRepository;
     private final FileUploadService fileUploadService;
 
@@ -41,52 +43,39 @@ public class CheeseService {
         String fileUrl = null;
 
         try {
-            // ✅ 1. 중복 체크
             if (cheeseRepository.existsByCheeseName(cheeseRequestDTO.getCheeseName())) {
                 throw new CheeseAlreadyExistsException(cheeseRequestDTO.getCheeseName());
             }
 
-            // ✅ 2. S3에 이미지 업로드 (DB 저장 전에 수행)
+            CheeseStatus status = CheeseStatus.valueOf(cheeseRequestDTO.getStatus().toUpperCase());
+
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 3. 치즈 정보 저장
             Cheese cheese = Cheese.builder()
                     .cheeseName(cheeseRequestDTO.getCheeseName())
                     .calorie(cheeseRequestDTO.getCalorie())
                     .price(cheeseRequestDTO.getPrice())
+                    .status(status.name())
                     .img(fileUrl)
-                    .status("active")
                     .build();
 
             return toResponseDTO(cheeseRepository.save(cheese));
-
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                    System.out.println("🚨 저장 실패로 인해 S3 파일 삭제 완료: " + fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
-
-            throw e; // 예외 다시 던져서 트랜잭션 롤백
+            throw e;
         }
     }
 
-    // 치즈 삭제
+    // 치즈 삭제 (상태만 DELETED로 변경)
     @Transactional
     public void removeCheese(String cheeseName) {
         Cheese cheese = cheeseRepository.findByCheeseName(cheeseName)
                 .orElseThrow(() -> new CheeseNotFoundException(cheeseName));
-
-        // ✅ 상태를 "DELETED"로 변경
-        cheese.setStatus("DELETED");
-
-        // ✅ 변경된 상태 저장
+        cheese.setStatus(CheeseStatus.DELETED.name());
         cheeseRepository.save(cheese);
     }
 
@@ -99,7 +88,6 @@ public class CheeseService {
         String fileUrl = cheese.getImg();
 
         try {
-            // ✅ 새 이미지 업로드 시 기존 이미지 삭제
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -107,23 +95,18 @@ public class CheeseService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 변경 감지로 자동 업데이트
             cheese.updateCheese(
                     cheeseRequestDTO.getCheeseName(),
                     cheeseRequestDTO.getCalorie(),
                     cheeseRequestDTO.getPrice(),
-                    fileUrl // 새 이미지 URL 반영
+                    fileUrl,
+                    cheeseRequestDTO.getStatus()
             );
 
             return toResponseDTO(cheese);
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 새 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script th:src="@{/js/common.js}"></script>
+    <script th:src="@{/js/cheeseEdit.js}"></script>
+    <link th:href="@{/css/commonEdit.css}" rel="stylesheet">
+    <title>치즈 정보 수정</title>
+</head>
+<body>
+<div class="container">
+    <h1>치즈 정보 수정</h1>
+    <form id="cheeseEditForm">
+        <input type="hidden" id="uid" name="uid" th:value="${cheese.uid}">
+
+        <div class="form-group">
+            <label for="cheeseName">치즈 이름</label>
+            <input type="text" id="cheeseName" name="cheeseName" th:value="${cheese.cheeseName}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="calorie">칼로리</label>
+            <input type="number" id="calorie" name="calorie" th:value="${cheese.calorie}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="price">가격</label>
+            <input type="number" id="price" name="price" th:value="${cheese.price}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="status">상태</label>
+            <select id="status" name="status">
+                <option value="active" th:selected="${cheese.status == 'ACTIVE'}">활성</option>
+                <option value="deleted" th:selected="${cheese.status == 'DELETED'}">비활성</option>
+            </select>
+        </div>
+
+
+        <div class="form-group">
+            <label>현재 이미지</label>
+            <br>
+            <img th:src="${cheese.img}" alt="치즈 이미지" width="100">
+        </div>
+
+        <div class="form-group">
+            <label for="img">새 이미지 업로드</label>
+            <input type="file" id="img" name="file" accept="image/*">
+            <input type="hidden" id="imgUrl" name="img" th:value="${cheese.img}">
+        </div>
+
+        <div class="form-actions">
+            <button type="button" id="updateBtn">수정하기</button>
+            <button type="button" onclick="location.href='/cheeses/list'">목록으로</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'메뉴 상세 - ' + ${menu.menuName}">메뉴 상세</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/menuForCustomer.css}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-title">🥪 메뉴 상세보기</div>
+    <div class="navbar-links">
+        <a href="/" class="nav-link">홈</a>
+    </div>
+</nav>
+
+<div class="menu-detail-container">
+    <h1 class="menu-title" th:text="${menu.menuName}">메뉴 이름</h1>
+    <img th:src="${menu.img}" alt="메뉴 이미지" class="menu-img">
+
+    <div class="menu-info">
+        <p><strong>가격:</strong> <span th:text="${menu.price}">0</span>원</p>
+        <p><strong>칼로리:</strong> <span th:text="${menu.calorie}">0</span> kcal</p>
+        <p><strong>빵:</strong> <span th:text="${menu.breadName}">빵</span></p>
+        <p><strong>치즈:</strong> <span th:text="${menu.cheeseName}">치즈</span></p>
+
+        <p><strong>재료:</strong></p>
+        <div class="menu-tags">
+            <span class="tag" th:if="${menu.material1Name}" th:text="${menu.material1Name}"></span>
+            <span class="tag" th:if="${menu.material2Name}" th:text="${menu.material2Name}"></span>
+            <span class="tag" th:if="${menu.material3Name}" th:text="${menu.material3Name}"></span>
+        </div>
+
+        <p><strong>소스:</strong></p>
+        <div class="menu-tags">
+            <span class="tag" th:if="${menu.sauce1Name}" th:text="${menu.sauce1Name}"></span>
+            <span class="tag" th:if="${menu.sauce2Name}" th:text="${menu.sauce2Name}"></span>
+            <span class="tag" th:if="${menu.sauce3Name}" th:text="${menu.sauce3Name}"></span>
+        </div>
+
+        <p><strong>야채:</strong></p>
+        <div class="menu-tags">
+            <span class="tag" th:if="${menu.vegetable1Name}" th:text="${menu.vegetable1Name}"></span>
+            <span class="tag" th:if="${menu.vegetable2Name}" th:text="${menu.vegetable2Name}"></span>
+            <span class="tag" th:if="${menu.vegetable3Name}" th:text="${menu.vegetable3Name}"></span>
+            <span class="tag" th:if="${menu.vegetable4Name}" th:text="${menu.vegetable4Name}"></span>
+            <span class="tag" th:if="${menu.vegetable5Name}" th:text="${menu.vegetable5Name}"></span>
+            <span class="tag" th:if="${menu.vegetable6Name}" th:text="${menu.vegetable6Name}"></span>
+            <span class="tag" th:if="${menu.vegetable7Name}" th:text="${menu.vegetable7Name}"></span>
+            <span class="tag" th:if="${menu.vegetable8Name}" th:text="${menu.vegetable8Name}"></span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

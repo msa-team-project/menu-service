@@ -1,5 +1,3 @@
-/* breadList.css */
-
 body {
     font-family: 'Arial', sans-serif;
     margin: 20px;
@@ -21,6 +19,7 @@ h1 {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 테이블 스타일 */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -52,19 +51,22 @@ td {
     text-align: center;
 }
 
+/* 이미지 */
 img {
     border-radius: 5px;
 }
 
+/* 공통 버튼 스타일 */
 button, .delete-btn, a {
     padding: 8px 12px;
+    font-size: 14px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
     transition: all 0.3s ease-in-out;
 }
 
+/* 일반 버튼 */
 button {
     background-color: #28a745;
     color: white;
@@ -74,6 +76,12 @@ button:hover {
     background-color: #218838;
 }
 
+/* 버튼 간격 */
+button + button {
+    margin-left: 10px;
+}
+
+/* 삭제 버튼 */
 .delete-btn {
     background-color: #dc3545;
     color: white;
@@ -83,22 +91,23 @@ button:hover {
     background-color: #c82333;
 }
 
+/* 링크 (수정 링크 포함) */
 a {
     text-decoration: none;
     background-color: #007bff;
     color: white;
-    padding: 8px 12px;
-    border-radius: 5px;
 }
 
 a:hover {
     background-color: #0056b3;
 }
 
+/* 반응형 */
 @media (max-width: 600px) {
     table {
         font-size: 12px;
     }
+
     button, .delete-btn, a {
         font-size: 12px;
         padding: 6px 10px;

@@ -39,12 +39,8 @@ public class MenuApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                menuRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            MenuResponseDTO response = menuService.addMenu(menuRequestDTO,file);
+            // ✅ 파일 업로드는 Service에서 수행
+            MenuResponseDTO response = menuService.addMenu(menuRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -59,12 +55,8 @@ public class MenuApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                menuRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            MenuResponseDTO response = menuService.editMenuDetails(menuName, menuRequestDTO,file);
+            // ✅ 파일 업로드는 Service에서 수행
+            MenuResponseDTO response = menuService.editMenuDetails(menuName, menuRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();

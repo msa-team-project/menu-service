@@ -6,6 +6,7 @@ import com.example.menuservice.dto.MaterialResponseDTO;
 import com.example.menuservice.exception.MaterialAlreadyExistsException;
 import com.example.menuservice.exception.MaterialNotFoundException;
 import com.example.menuservice.repository.MaterialRepository;
+import com.example.menuservice.status.MaterialStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,7 @@ public class MaterialService {
                 .collect(Collectors.toList());
     }
 
-    // 재료 이름으로 조회
+    // 재료 이름으로 재료 조회
     public MaterialResponseDTO viewMaterial(String materialName) {
         Material material = materialRepository.findByMaterialName(materialName)
                 .orElseThrow(() -> new MaterialNotFoundException(materialName));
@@ -37,69 +38,55 @@ public class MaterialService {
 
     // 재료 추가
     @Transactional
-    public MaterialResponseDTO addMaterial(MaterialRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public MaterialResponseDTO addMaterial(MaterialRequestDTO materialRequestDTO, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ✅ 1. 중복 체크
-            if (materialRepository.existsByMaterialName(requestDTO.getMaterialName())) {
-                throw new MaterialAlreadyExistsException(requestDTO.getMaterialName());
+            if (materialRepository.existsByMaterialName(materialRequestDTO.getMaterialName())) {
+                throw new MaterialAlreadyExistsException(materialRequestDTO.getMaterialName());
             }
 
-            // ✅ 2. S3에 이미지 업로드 (DB 저장 전에 수행)
+            MaterialStatus status = MaterialStatus.valueOf(materialRequestDTO.getStatus().toUpperCase());
+
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 3. 재료 정보 저장
             Material material = Material.builder()
-                    .materialName(requestDTO.getMaterialName())
-                    .calorie(requestDTO.getCalorie())
-                    .price(requestDTO.getPrice())
+                    .materialName(materialRequestDTO.getMaterialName())
+                    .calorie(materialRequestDTO.getCalorie())
+                    .price(materialRequestDTO.getPrice())
                     .img(fileUrl)
-                    .status("active")
+                    .status(status.name())
                     .build();
 
             return toResponseDTO(materialRepository.save(material));
-
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                    System.out.println("🚨 저장 실패로 인해 S3 파일 삭제 완료: " + fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
-
-            throw e; // 예외 다시 던져서 트랜잭션 롤백
+            throw e;
         }
     }
 
-    // 재료 삭제 (상태를 "DELETED"로 변경)
+    // 재료 삭제
     @Transactional
     public void removeMaterial(String materialName) {
         Material material = materialRepository.findByMaterialName(materialName)
                 .orElseThrow(() -> new MaterialNotFoundException(materialName));
-
-        // ✅ 상태를 "DELETED"로 변경
-        material.setStatus("DELETED");
-
-        // ✅ 변경된 상태 저장
+        material.setStatus(MaterialStatus.DELETED.name());
         materialRepository.save(material);
     }
 
     // 재료 수정
     @Transactional
-    public MaterialResponseDTO editMaterialDetails(String materialName, MaterialRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public MaterialResponseDTO editMaterialDetails(String materialName, MaterialRequestDTO materialRequestDTO, MultipartFile file) throws IOException {
         Material material = materialRepository.findByMaterialName(materialName)
                 .orElseThrow(() -> new MaterialNotFoundException(materialName));
 
         String fileUrl = material.getImg();
 
         try {
-            // ✅ 새 이미지 업로드 시 기존 이미지 삭제
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -107,23 +94,18 @@ public class MaterialService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 변경 감지로 자동 업데이트
             material.updateMaterial(
-                    requestDTO.getMaterialName(),
-                    requestDTO.getCalorie(),
-                    requestDTO.getPrice(),
-                    fileUrl // 새 이미지 URL 반영
+                    materialRequestDTO.getMaterialName(),
+                    materialRequestDTO.getCalorie(),
+                    materialRequestDTO.getPrice(),
+                    fileUrl,
+                    materialRequestDTO.getStatus()
             );
 
             return toResponseDTO(material);
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 새 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
@@ -131,7 +113,7 @@ public class MaterialService {
 
     // 재료 상태 업데이트
     @Transactional
-    public void updateMainMaterialStatus(Long uid, String status) {
+    public void updateMaterialStatus(Long uid, String status) {
         Material material = materialRepository.findById(uid)
                 .orElseThrow(() -> new MaterialNotFoundException("ID: " + uid));
         material.setStatus(status);

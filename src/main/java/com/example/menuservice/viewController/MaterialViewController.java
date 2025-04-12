@@ -13,7 +13,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-public class materialViewController {
+public class MaterialViewController {
 
     private final MaterialService materialService;
     private final FileUploadService fileUploadService;

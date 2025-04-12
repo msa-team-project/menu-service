@@ -1,45 +1,63 @@
 $(document).ready(function () {
-    $("#menuForm").on("submit", function (event) {
-        event.preventDefault(); // 기본 제출 방지
+    // checkToken();
+    // setupAjax();
 
-        let fileInput = $("#img")[0].files[0];
+    $("#submitBtn").on("click", function (event) {
+        event.preventDefault(); // 기본 제출 막기
 
+        const fileInput = $("#img")[0].files[0];
         if (!fileInput) {
             alert("이미지를 업로드해야 합니다.");
             return;
         }
 
-        let formData = new FormData();
-        formData.append("file", fileInput); // 이미지 파일 추가
-
-        let menuData = {
-            menuName: $("input[name='menuName']").val(),
-            price: parseInt($("input[name='price']").val(), 10),
-            calorie: parseFloat($("input[name='calorie']").val()),
-            bread: $("select[name='bread']").val(),
-            material1: $("select[name='material1']").val(),
-            material2: $("select[name='material2']").val() || null,
-            material3: $("select[name='material3']").val() || null,
-            cheese: $("select[name='cheese']").val() || null,
-            vegetable1: $("select[name='vegetable1']").val(),
-            vegetable2: $("select[name='vegetable2']").val() || null,
-            vegetable3: $("select[name='vegetable3']").val() || null,
-            vegetable4: $("select[name='vegetable4']").val() || null,
-            vegetable5: $("select[name='vegetable5']").val() || null,
-            vegetable6: $("select[name='vegetable6']").val() || null,
-            vegetable7: $("select[name='vegetable7']").val() || null,
-            vegetable8: $("select[name='vegetable8']").val() || null,
-            sauce1: $("select[name='sauce1']").val(),
-            sauce2: $("select[name='sauce2']").val() || null,
-            sauce3: $("select[name='sauce3']").val() || null,
-            status: $("select[name='status']").val() === "active" ? "ACTIVE" : "DELETED"
+        const getValue = (name, allowEmpty = false) => {
+            const val = $(`[name='${name}']`).val();
+            return allowEmpty ? val : val || null;
         };
 
-        // ✅ JSON 데이터를 Blob으로 변환하여 FormData에 추가
-        let jsonBlob = new Blob([JSON.stringify(menuData)], { type: "application/json" });
-        formData.append("menu", jsonBlob); // 백엔드에서 @RequestPart("menu")와 일치
+        const price = parseInt(getValue("price"), 10);
+        const calorie = parseFloat(getValue("calorie"));
 
-        // ✅ Ajax 요청
+        if (isNaN(price) || price <= 0) {
+            alert("가격은 0보다 큰 숫자여야 합니다.");
+            return;
+        }
+
+        if (isNaN(calorie) || calorie < 0) {
+            alert("칼로리는 0 이상 숫자여야 합니다.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput);
+
+        const menuData = {
+            menuName: getValue("menuName"),
+            price: price,
+            calorie: calorie,
+            bread: getValue("bread"),
+            material1: getValue("material1"),
+            material2: getValue("material2"),
+            material3: getValue("material3"),
+            cheese: getValue("cheese"),
+            vegetable1: getValue("vegetable1"),
+            vegetable2: getValue("vegetable2"),
+            vegetable3: getValue("vegetable3"),
+            vegetable4: getValue("vegetable4"),
+            vegetable5: getValue("vegetable5"),
+            vegetable6: getValue("vegetable6"),
+            vegetable7: getValue("vegetable7"),
+            vegetable8: getValue("vegetable8"),
+            sauce1: getValue("sauce1"),
+            sauce2: getValue("sauce2"),
+            sauce3: getValue("sauce3"),
+            status: getValue("status") === "active" ? "ACTIVE" : "DELETED"
+        };
+
+        const jsonBlob = new Blob([JSON.stringify(menuData)], { type: "application/json" });
+        formData.append("menu", jsonBlob);
+
         $.ajax({
             url: "/menus",
             type: "POST",
@@ -49,11 +67,11 @@ $(document).ready(function () {
             contentType: false,
             success: function () {
                 alert("메뉴가 성공적으로 등록되었습니다!");
-                // window.location.href = "/menus/list";
+                window.location.href = "/menus/list";
             },
             error: function (xhr) {
-                console.error("Error:", xhr.responseText);
-                alert("메뉴 등록 중 오류가 발생했습니다.");
+                console.error("등록 실패:", xhr.status, xhr.responseText);
+                alert("메뉴 등록 중 오류가 발생했습니다:\n" + xhr.responseText);
             }
         });
     });

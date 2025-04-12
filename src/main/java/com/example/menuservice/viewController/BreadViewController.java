@@ -1,4 +1,4 @@
-package com.example.menuservice.veiwController;
+package com.example.menuservice.viewController;
 
 import com.example.menuservice.dto.BreadResponseDTO;
 import com.example.menuservice.service.BreadService;

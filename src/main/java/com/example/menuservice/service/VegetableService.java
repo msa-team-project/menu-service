@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.status.VegetableStatus;
 import com.example.menuservice.domain.Vegetable;
 import com.example.menuservice.dto.VegetableRequestDTO;
 import com.example.menuservice.dto.VegetableResponseDTO;
@@ -28,7 +29,7 @@ public class VegetableService {
                 .collect(Collectors.toList());
     }
 
-    // 채소 이름으로 조회
+    // 채소 이름으로 채소 조회
     public VegetableResponseDTO viewVegetable(String vegetableName) {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
@@ -37,68 +38,54 @@ public class VegetableService {
 
     // 채소 추가
     @Transactional
-    public VegetableResponseDTO addVegetable(VegetableRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public VegetableResponseDTO addVegetable(VegetableRequestDTO vegetableRequestDTO, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ✅ 1. 중복 체크
-            if (vegetableRepository.existsByVegetableName(requestDTO.getVegetableName())) {
-                throw new VegetableAlreadyExistsException(requestDTO.getVegetableName());
+            if (vegetableRepository.existsByVegetableName(vegetableRequestDTO.getVegetableName())) {
+                throw new VegetableAlreadyExistsException(vegetableRequestDTO.getVegetableName());
             }
 
-            // ✅ 2. S3에 이미지 업로드 (DB 저장 전에 수행)
+            VegetableStatus status = VegetableStatus.valueOf(vegetableRequestDTO.getStatus().toUpperCase());
+
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 3. 채소 정보 저장
             Vegetable vegetable = Vegetable.builder()
-                    .vegetableName(requestDTO.getVegetableName())
-                    .calorie(requestDTO.getCalorie())
-                    .price(requestDTO.getPrice())
+                    .vegetableName(vegetableRequestDTO.getVegetableName())
+                    .calorie(vegetableRequestDTO.getCalorie())
+                    .price(vegetableRequestDTO.getPrice())
+                    .status(status.name())
                     .img(fileUrl)
-                    .status("active")
                     .build();
 
             return toResponseDTO(vegetableRepository.save(vegetable));
-
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
-
-            throw e; // 예외 다시 던져서 트랜잭션 롤백
+            throw e;
         }
     }
 
-    // 채소 삭제 (상태를 "DELETED"로 변경)
+    // 채소 삭제
     @Transactional
     public void removeVegetable(String vegetableName) {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
-
-        // ✅ 상태를 "DELETED"로 변경
-        vegetable.setStatus("DELETED");
-
-        // ✅ 변경된 상태 저장
+        vegetable.setStatus(VegetableStatus.DELETED.name());
         vegetableRepository.save(vegetable);
     }
 
     // 채소 수정
     @Transactional
-    public VegetableResponseDTO editVegetableDetails(String vegetableName, VegetableRequestDTO requestDTO, MultipartFile file) throws IOException {
+    public VegetableResponseDTO editVegetableDetails(String vegetableName, VegetableRequestDTO vegetableRequestDTO, MultipartFile file) throws IOException {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
 
         String fileUrl = vegetable.getImg();
-
         try {
-            // ✅ 새 이미지 업로드 시 기존 이미지 삭제
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -106,23 +93,18 @@ public class VegetableService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // ✅ 변경 감지로 자동 업데이트
             vegetable.updateVegetable(
-                    requestDTO.getVegetableName(),
-                    requestDTO.getCalorie(),
-                    requestDTO.getPrice(),
-                    fileUrl // 새 이미지 URL 반영
+                    vegetableRequestDTO.getVegetableName(),
+                    vegetableRequestDTO.getCalorie(),
+                    vegetableRequestDTO.getPrice(),
+                    fileUrl,
+                    vegetableRequestDTO.getStatus()
             );
 
             return toResponseDTO(vegetable);
         } catch (Exception e) {
-            // 🚨 트랜잭션 롤백 전에 업로드된 새 이미지 삭제
             if (fileUrl != null) {
-                try {
-                    fileUploadService.deleteFile(fileUrl);
-                } catch (Exception s3Exception) {
-                    System.out.println("⚠ S3 파일 삭제 실패: " + fileUrl);
-                }
+                fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }

@@ -53,10 +53,11 @@ public class Vegetable {
         private int version;
 
         // ✅ 채소 정보 업데이트 메서드 추가
-        public void updateVegetable(String vegetableName, double calorie, int price, String img) {
+        public void updateVegetable(String vegetableName, double calorie, int price, String img,String status) {
                 this.vegetableName = vegetableName;
                 this.calorie = calorie;
                 this.price = price;
                 this.img = img;
+                this.status = status;
         }
 }

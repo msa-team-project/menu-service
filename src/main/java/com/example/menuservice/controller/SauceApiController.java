@@ -39,12 +39,8 @@ public class SauceApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                sauceRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            SauceResponseDTO response = sauceService.addSauce(sauceRequestDTO,file);
+            // ✅ 업로드는 Service에서 처리
+            SauceResponseDTO response = sauceService.addSauce(sauceRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -59,12 +55,8 @@ public class SauceApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                sauceRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            SauceResponseDTO response = sauceService.editSauceDetails(sauceName, sauceRequestDTO,file);
+            // ✅ 업로드는 Service에서 처리
+            SauceResponseDTO response = sauceService.editSauceDetails(sauceName, sauceRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();

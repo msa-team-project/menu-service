@@ -52,10 +52,11 @@ public class Cheese {
         @Version
         private int version;
         // ✅ 치즈 정보 업데이트 메서드 추가
-        public void updateCheese(String cheeseName, Double calorie, int price, String img) {
+        public void updateCheese(String cheeseName, Double calorie, int price, String img,String status) {
                 this.cheeseName = cheeseName;
                 this.calorie = calorie;
                 this.price = price;
                 this.img = img;
+                this.status = status;
         }
 }

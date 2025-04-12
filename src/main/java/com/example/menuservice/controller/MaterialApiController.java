@@ -39,12 +39,8 @@ public class MaterialApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                materialRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            MaterialResponseDTO response = materialService.addMaterial(materialRequestDTO,file);
+            // ❌ 업로드는 Service에서
+            MaterialResponseDTO response = materialService.addMaterial(materialRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();
@@ -59,12 +55,8 @@ public class MaterialApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            if (file != null && !file.isEmpty()) {
-                String fileUrl = fileUploadService.uploadFile(file);
-                materialRequestDTO.setImg(fileUrl); // DTO에 이미지 URL 저장
-            }
-
-            MaterialResponseDTO response = materialService.editMaterialDetails(materialName, materialRequestDTO,file);
+            // ❌ 업로드는 Service에서
+            MaterialResponseDTO response = materialService.editMaterialDetails(materialName, materialRequestDTO, file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().build();

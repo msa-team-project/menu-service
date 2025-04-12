@@ -52,10 +52,11 @@ public class Side {
         @Version
         private int version;
         // ✅ 사이드 정보 업데이트 메서드 추가
-        public void updateSide(String sideName, double calorie, int price, String img) {
+        public void updateSide(String sideName, double calorie, int price, String img,String status) {
                 this.sideName = sideName;
                 this.calorie = calorie;
                 this.price = price;
                 this.img = img;
+                this.status = status;
         }
 }
