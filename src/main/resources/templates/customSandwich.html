@@ -1,0 +1,112 @@
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <title>메뉴 등록</title>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+<!--    <script th:src="@{/js/common.js}"></script>-->
+<!--    <script th:src="@{/js/menuAdmin.js}"></script>-->
+<!--    <link th:href="@{/css/menuAdmin.css}" rel="stylesheet">-->
+<!--</head>-->
+<!--<body>-->
+<!--<h2>메뉴 등록</h2>-->
+
+<!--<form id="menuForm" th:action="@{/menus}" method="post" enctype="multipart/form-data">-->
+<!--    <label>메뉴 이름:</label>-->
+<!--    <input type="text" name="menuName" required><br>-->
+
+<!--    <label>가격:</label>-->
+<!--    <input type="number" name="price" required><br>-->
+
+<!--    <label>칼로리:</label>-->
+<!--    <input type="number" name="calorie" step="0.1" required><br>-->
+
+<!--    <label>빵 선택:</label>-->
+<!--    <select name="bread" required>-->
+<!--        <option value="">빵을 선택하세요</option>-->
+<!--        <option th:each="bread : ${breads}" th:value="${bread.uid}" th:text="${bread.breadName}"></option>-->
+<!--    </select><br>-->
+
+<!--    <label>메인 재료 1:</label>-->
+<!--    <select name="material1">-->
+<!--        <option value="">재료를 선택하세요</option>-->
+<!--        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>-->
+<!--    </select><br>-->
+
+<!--    <label>추가 재료:</label>-->
+<!--    <select name="material2">-->
+<!--        <option value="">선택 안 함</option>-->
+<!--        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>-->
+<!--    </select>-->
+<!--    <select name="material3">-->
+<!--        <option value="">선택 안 함</option>-->
+<!--        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>-->
+<!--    </select><br>-->
+
+<!--    <label>치즈 선택:</label>-->
+<!--    <select name="cheese">-->
+<!--        <option value="">선택 안 함</option>-->
+<!--        <option th:each="ch : ${cheeses}" th:value="${ch.uid}" th:text="${ch.cheeseName}"></option>-->
+<!--    </select><br>-->
+
+<!--    <label>채소 선택:</label>-->
+<!--    <div class="select-group">-->
+<!--        <select name="vegetable1">-->
+<!--            <option value="">채소를 선택하세요</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable2">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable3">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable4">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable5">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable6">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable7">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--        <select name="vegetable8">-->
+<!--            <option value="">선택 안 함</option>-->
+<!--            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>-->
+<!--        </select>-->
+<!--    </div><br>-->
+
+<!--    <label>소스 선택:</label>-->
+<!--    <select name="sauce1">-->
+<!--        <option value="">소스를 선택하세요</option>-->
+<!--        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>-->
+<!--    </select>-->
+<!--    <select name="sauce2">-->
+<!--        <option value="">선택 안 함</option>-->
+<!--        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>-->
+<!--    </select>-->
+<!--    <select name="sauce3">-->
+<!--        <option value="">선택 안 함</option>-->
+<!--        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>-->
+<!--    </select><br>-->
+
+<!--    -->
+
+<!--    <div class="form-actions">-->
+<!--        <button type="submit" class="btn" id="submitBtn">장바구니에 담기</button>-->
+
+<!--        <button type="button" class="btn cancel-btn" onclick="location.href='/menus/list'">목록으로 가기</button>-->
+<!--        <button type="button" class="btn main-btn" onclick="location.href='/admin'">메인으로 가기</button>-->
+<!--    </div>-->
+<!--</form>-->
+<!--</body>-->
+<!--</html>-->

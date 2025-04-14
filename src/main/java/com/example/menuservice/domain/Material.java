@@ -51,6 +51,9 @@ public class Material {
 
         @Version
         private int version;
+
+
+
         // ✅ 재료 정보 업데이트 메서드 추가
         public void updateMaterial(String materialName, Double calorie, int price, String img,String status) {
                 this.materialName = materialName;

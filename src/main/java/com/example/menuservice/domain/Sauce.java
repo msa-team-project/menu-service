@@ -51,6 +51,9 @@ public class Sauce {
 
         @Version
         private int version;
+
+
+
         // ✅ 소스 정보 업데이트 메서드 추가
         public void updateSauce(String sauceName, double calorie, int price, String img,String status) {
                 this.sauceName = sauceName;
