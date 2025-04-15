@@ -30,4 +30,7 @@ public class SideRequestDTO {
 
     // 이미지 파일과 URL을 함께 관리
     private MultipartFile file; // 업로드할 이미지 파일
+
+    public SideRequestDTO(String brownie, int i, int i1, String active) {
+    }
 }

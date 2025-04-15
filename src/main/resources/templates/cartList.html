@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>장바구니</title>
+    <meta charset="UTF-8">
+
+    <!-- 외부 CSS 파일 링크 -->
+    <link th:href="@{/css/cartList.css}" rel="stylesheet">
+
+    <!-- jQuery 라이브러리 추가 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 외부 JS 파일을 불러오기 -->
+    <script th:src="@{/js/common.js}"></script>
+    <script th:src="@{/js/cartList.js}"></script>
+</head>
+<body>
+<div class="cart-container">
+    <h1 class="cart-title">장바구니</h1>
+
+    <form id="cartForm">
+        <table class="cart-table">
+            <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"> 전체 선택</th>
+                <th>메뉴 이름</th>
+                <th>수량</th>
+                <th>가격</th>
+                <th>총액</th>
+                <th>삭제</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${cartItems}" th:attr="data-id=${item.uid}">
+                <td><input type="checkbox" name="selectedIds" th:value="${item.uid}" class="item-checkbox"></td>
+                <td th:text="${item.menuName}" class="menu-name">메뉴 이름</td>
+                <td>
+                    <input type="number" min="1" th:value="${item.amount}" class="amount-input">
+                    <button type="button" class="update-btn">변경</button>
+                </td>
+                <td class="item-price" th:text="${item.price}">0</td>
+                <td class="total-cell" th:text="${item.price * item.amount}">0</td>
+                <td>
+                    <button type="button" class="delete-btn">삭제</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="cart-summary">
+            총 수량: <span id="totalQuantity" th:text="${totalQuantity}">0</span>개 |
+            총 결제 금액: <span id="totalPrice" th:text="${totalPrice}">0</span>원
+        </div>
+
+        <div class="cart-actions">
+            <button type="button" id="deleteSelected">선택 삭제</button>
+            <button type="button" id="checkout">결제하기</button>
+            <button type="button" id="backToHome">주문 화면</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

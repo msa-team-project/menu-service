@@ -52,6 +52,8 @@ public class Bread {
         @Version
         private int version;
 
+
+
         // ✅ 빵 정보 업데이트 메서드 추가
         public void updateBread(String breadName, Double calorie, int price, String img,String status) {
                 this.breadName = breadName;
