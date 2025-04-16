@@ -37,6 +37,12 @@ public class Store{
         @Column(name = "postcode")
         private String storePostcode;
 
+        @Column(name = "latitude")
+        private Double storeLatitude;
+
+        @Column(name = "longitude")
+        private Double storeLongitude;
+
         @NotBlank(message = "the status must be defined.")
         @Column(name = "status")
         private String storeStatus;
@@ -55,6 +61,8 @@ public class Store{
                         .storeName(this.getStoreName())
                         .storeAddress(this.getStoreAddress())
                         .storePostcode(this.getStorePostcode())
+                        .storeLatitude(this.getStoreLatitude())
+                        .storeLongitude(this.getStoreLongitude())
                         .storeStatus(this.getStoreStatus())
                         .storeCreatedDate(this.getStoreCreatedDate())
                         .build();

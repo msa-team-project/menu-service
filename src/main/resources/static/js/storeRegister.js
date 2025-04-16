@@ -1,4 +1,7 @@
 $(document).ready(()=>{
+    $('#postcode,#address').click(()=>{
+        execDaumPostcode();
+    });
 
     $('#storeRegister').click((event)=>{
 
@@ -8,6 +11,11 @@ $(document).ready(()=>{
         let  address=$('#address').val();
         let  postcode=$('#postcode').val();
         let  status='ACTIVE';
+
+        if (!storeName || !address || !postcode) {
+            alert('모든 항목을 입력해주세요.');
+            return;
+        }
 
 
         let formData={
@@ -29,7 +37,7 @@ $(document).ready(()=>{
             success:(response)=>{
                 alert('지점가입이 성공했습니다.');
 
-                window.location.href='/store/storelist';
+                window.location.href='/store/storelist';//목록 페이지로 이동
 
             },
             error:(error)=>{

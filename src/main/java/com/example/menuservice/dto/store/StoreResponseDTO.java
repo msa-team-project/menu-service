@@ -15,6 +15,8 @@ public class StoreResponseDTO {
     private String  storeName;
     private String  storeAddress;
     private String  storePostcode;
+    private Double  storeLatitude;
+    private Double  storeLongitude;
     private String  storeStatus;
     private Instant storeCreatedDate;
 }
