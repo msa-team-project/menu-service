@@ -58,6 +58,11 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport' // test가 끝나면 jacocoTestReport 동작
 }
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-parameters"
+}
+
+
 
 jacoco {
     toolVersion = "0.8.10" // 최신 버전 사용

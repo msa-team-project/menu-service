@@ -1,101 +1,75 @@
+/* storeDetail.css - storeRegister.css 스타일 기반 */
+
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    background-color: #f7f7f7;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100vh;
 }
 
-.container {
+.storeDetail-container {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 800px;
+    width: 400px;
 }
 
-.article-header {
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
+h2 {
+    text-align: center;
     margin-bottom: 20px;
-}
-
-h1 {
-    font-size: 2em;
     color: #333;
-    margin: 0;
 }
 
-.article-info {
-    color: #666;
-    font-size: 0.9em;
-    margin-top: 5px;
+.form-group {
+    margin-bottom: 15px;
 }
 
-.article-content {
-    font-size: 1.2em;
-    color: #333;
-    line-height: 1.6;
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
 }
 
-.article-footer {
-    margin-top: 20px;
-    text-align: right;
+input[type="text"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
-.btn {
+button {
+    width: 48%;
+    padding: 10px;
     background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
     border: none;
+    color: white;
+    font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
-    margin-left: 10px;
-    font-size: 1em;
+    margin-top: 15px;
 }
 
-.btn:hover {
+button:hover {
     background-color: #45a049;
 }
 
-.edit-btn {
-    background-color: #008CBA;
+.btn-delete {
+    background-color: #dc3545;
 }
 
-.edit-btn:hover {
-    background-color: #007bb5;
+.btn-delete:hover {
+    background-color: #c82333;
 }
 
-/* 버튼이 비활성화된 경우 스타일 */
-#editBtn:disabled {
-    background-color: #cccccc; /* 비활성화 상태의 색 */
-    cursor: not-allowed; /* 커서를 변경하여 비활성화된 느낌을 줌 */
-    color: #666666; /* 텍스트 색상 변경 */
-}
-
-
-#deleteBtn {
-    background-color: #f44336; /* 빨간색 배경 */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-}
-
-/* Hover 시 배경 색상 변경 */
-#deleteBtn:hover {
-    background-color: #e53935; /* 조금 더 어두운 빨간색 */
-}
-
-/* 버튼이 비활성화된 경우 스타일 */
-#deleteBtn:disabled {
-    background-color: #cccccc; /* 비활성화 상태의 색 */
-    cursor: not-allowed; /* 커서를 변경하여 비활성화된 느낌을 줌 */
-    color: #666666; /* 텍스트 색상 변경 */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 4%;
 }

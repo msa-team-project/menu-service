@@ -33,39 +33,39 @@ public class StoreService {
 
         } else {
             //lastUid 이후로 데이터 가져오기
-            stores = storeRepository.findByUidGreaterThanOrderByUidAsc(lastUid,limit);
+            stores = storeRepository.findByUidGreaterThanOrderByUidAsc(lastUid, limit);
         }
 
-            //StoreResponseDTO로 변환
-            List<StoreResponseDTO> storeResponseDTOS = stores.stream()
-                    .map(store -> store.toStoreResponseDTO())
-                    .collect(Collectors.toList());
+        //StoreResponseDTO로 변환
+        List<StoreResponseDTO> storeResponseDTOS = stores.stream()
+                .map(store -> store.toStoreResponseDTO())
+                .collect(Collectors.toList());
 
-            //마지막 페이지 여부 계산
-            boolean lastPage = stores.size() < limit;
+        //마지막 페이지 여부 계산
+        boolean lastPage = stores.size() < limit;
 
-            //nextCursor 계산:마지막 요소의 uid를 nextCursor로 설정
-            Long nextCursor = stores.isEmpty() ? null : stores.get(stores.size() - 1).getUid();
+        //nextCursor 계산:마지막 요소의 uid를 nextCursor로 설정
+        Long nextCursor = stores.isEmpty() ? null : stores.get(stores.size() - 1).getUid();
 
 
-            return StoreListResponseDTO.builder()
-                    .storeList(storeResponseDTOS)
-                    .lastPage(lastPage)
-                    .nextCursor(nextCursor)
-                    .build();
+        return StoreListResponseDTO.builder()
+                .storeList(storeResponseDTOS)
+                .lastPage(lastPage)
+                .nextCursor(nextCursor)
+                .build();
 
 
     }
 
     // 지점 이름으로 지점 조회
-    public StoreResponseDTO viewStore (Long uid){
+    public StoreResponseDTO viewStore(Long uid) {
         Store store = storeRepository.findByUid(uid)
                 .orElseThrow(() -> new StoreNotFoundException(uid));
         return store.toStoreResponseDTO();
     }
 
     //지점 추가
-    public StoreResponseDTO addStore (StoreRequestDTO storeRequestDTO) throws StoreAlreadyExistsException, IOException {
+    public StoreResponseDTO addStore(StoreRequestDTO storeRequestDTO) throws StoreAlreadyExistsException, IOException {
         if (storeRepository.existsByStoreName(storeRequestDTO.getStoreName())) {
             throw new StoreAlreadyExistsException(storeRequestDTO.getStoreName());
         }
@@ -87,7 +87,7 @@ public class StoreService {
 
     //지점 수정
     @Transactional
-    public StoreResponseDTO updateStore (Long uid, StoreRequestDTO storeRequestDTO) throws StoreNotFoundException {
+    public StoreResponseDTO updateStore(Long uid, StoreRequestDTO storeRequestDTO) throws StoreNotFoundException {
         Store existingStore = storeRepository.findByUid(uid)
                 .orElseThrow(() -> new StoreNotFoundException(uid));
 
@@ -104,23 +104,22 @@ public class StoreService {
         return saveStore.toStoreResponseDTO();
 
     }
+
+    //지점 상태 변경
+    public void updateStatusStore (Long uid, String status) throws StoreNotFoundException {
+        if (!storeRepository.existsById(uid)) {
+            throw new StoreNotFoundException(uid);
+        }
+        storeRepository.updateStatusByUid(uid, status);
+    }
+
+    //지점 삭제
+    public void deleteStore (Long uid){
+        if (!storeRepository.existsById(uid)) {
+            throw new StoreNotFoundException(uid);
+        }
+        storeRepository.deleteByUid(uid);
+    }
 }
-
-
-//    //지점 상태 변경
-//    public void updateStatusStore (Long uid, String status) throws StoreNotFoundException {
-//        if (!storeRepository.existsById(uid)) {
-//            throw new StoreNotFoundException(uid);
-//        }
-//        storeRepository.updateStatusByUid(uid, status);
-//    }
-//
-//    //지점 삭제
-//    public void deleteStore (Long uid){
-//        if (!storeRepository.existsById(uid)) {
-//            throw new StoreNotFoundException(uid);
-//        }
-//        storeRepository.deleteByUid(uid);
-//    }
 
 
