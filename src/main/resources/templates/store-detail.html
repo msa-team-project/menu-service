@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>지점 상세</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script th:src="@{/js/common.js}"></script>
+    <script th:src="@{/js/storeDetail.js}"></script>
+    <link th:href="@{/css/storeDetail.css}" rel="stylesheet">
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+</head>
+<body>
+<div class="storeDetail-container">
+    <h2>지점 상세 정보</h2>
+    <form id="storeDetailForm" th:action="@{'/stores/' + ${store.uid}}" method="post" th:object="${store}">
+        <input type="hidden" name="_method" value="put"/> <!-- PUT 메서드 지정 -->
+
+        <div>
+            <label>지점명:</label>
+            <input type="text" th:field="*{storeName}" required>
+        </div>
+        <div>
+            <label>주소:</label>
+            <input type="text" th:field="*{storeAddress}" required>
+        </div>
+        <div>
+            <label>우편번호:</label>
+            <input type="text" th:field="*{storePostcode}" required>
+        </div>
+        <div>
+            <label>상태:</label>
+            <select th:field="*{storeStatus}">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit">수정</button>
+            <button type="button" id="deleteBtn" style="background-color: #dc3545;">삭제</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
+

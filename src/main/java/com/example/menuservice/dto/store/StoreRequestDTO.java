@@ -9,4 +9,6 @@ public class StoreRequestDTO {
     private String storeAddress;
     private String storePostcode;
     private String storeStatus;
+    private Double storeLatitude;
+    private Double storeLongitude;
 }
