@@ -32,6 +32,7 @@ public class CartApiController {
     }
 
 
+
     // 장바구니 항목 수량 변경 API
     @PostMapping("/update/{id}")
     public ResponseEntity<?> updateCartItem(@PathVariable Long id, @RequestParam("amount") int amount) {
