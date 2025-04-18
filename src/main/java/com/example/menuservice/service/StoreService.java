@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class StoreService {
 
     private final StoreRepository storeRepository;
-    private final KakaoAddressService kakaoAddressService;
+
 
     //지점 목록 조회(커서방식)
     @Transactional
@@ -70,15 +70,13 @@ public class StoreService {
             throw new StoreAlreadyExistsException(storeRequestDTO.getStoreName());
         }
 
-        double[] coordinates = kakaoAddressService.convertToCoordinates(storeRequestDTO.getStoreAddress());
-
         Store store = Store.builder()
                 .storeName(storeRequestDTO.getStoreName())
                 .storeAddress(storeRequestDTO.getStoreAddress())
                 .storePostcode(storeRequestDTO.getStorePostcode())
                 .storeStatus(storeRequestDTO.getStoreStatus())
-                .storeLatitude(coordinates[0])
-                .storeLongitude(coordinates[1])
+                .storeLatitude(storeRequestDTO.getStoreLatitude())
+                .storeLongitude(storeRequestDTO.getStoreLongitude())
                 .build();
 
         Store saveStore = storeRepository.save(store);//DB에 저장해 줌.

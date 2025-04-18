@@ -1,6 +1,6 @@
 $(document).ready(function () {
     const params = new URLSearchParams(window.location.search);
-    const uid = params.get("id");
+    const uid = params.get("uid");
 
     // 지점 상세 조회
     $.ajax({
