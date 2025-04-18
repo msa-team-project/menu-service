@@ -2,6 +2,7 @@ package com.example.menuservice.viewController;
 
 import com.example.menuservice.dto.MenuResponseDTO;
 import com.example.menuservice.service.CartService;
+import com.example.menuservice.service.CustomCartService;
 import com.example.menuservice.service.MenuService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class MenuCustomerListViewController {
 
     private final MenuService menuService;
     private final CartService cartService;
+    private final CustomCartService customCartService;
 
     // 고객용 메뉴 목록 페이지
     @GetMapping("/")
@@ -30,9 +32,10 @@ public class MenuCustomerListViewController {
     }
     @PostMapping("/cart/add")
     public String addToCart(@RequestParam("menuId") Long menuId,
-                            @RequestParam("amount") int amount,
-                            HttpSession session) {
-        cartService.addToCart(menuId, amount, session);
+
+                            @RequestParam("amount") int amount
+                            ) {
+        cartService.addToCart(menuId,  amount);
         return "redirect:/cart";  // ✅ 장바구니 목록 불러오는 GET 요청으로 리디렉션
     }
 

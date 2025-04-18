@@ -11,6 +11,8 @@ import lombok.*;
 public class CustomCartResponseDTO {
 
     private Long uid;
+    private Double calorie;
+    private int price;
     private Long breadId;
     private String breadName;
 

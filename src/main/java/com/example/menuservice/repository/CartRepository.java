@@ -1,25 +1,22 @@
 package com.example.menuservice.repository;
 
 import com.example.menuservice.domain.Cart;
+import com.example.menuservice.domain.CustomCart;
+import com.example.menuservice.domain.Menu;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    // 세션 기반 장바구니 조회
-    List<Cart> findBySessionId(String sessionId);
+    // Cart 단건 조회
+    Optional<Cart> findById(Long id);
 
-    // 로그인 사용자 장바구니 조회
-    List<Cart> findByUserUid(Long userUid);
+    // Cart 삭제
+    void deleteById(Long id);
 
-    // 소셜 로그인 사용자 장바구니 조회
-    List<Cart> findBySocialUid(Long socialUid);
+    Optional<Cart> findByMenu(Menu menu);
 
-    // 장바구니 비우기
-    void deleteBySessionId(String sessionId);
-    void deleteByUserUid(Long userUid);
-    void deleteBySocialUid(Long socialUid);
-
+    Optional<Cart> findByCustomCart(CustomCart customCart);
 
 }

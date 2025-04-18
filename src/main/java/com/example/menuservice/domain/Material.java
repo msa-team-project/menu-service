@@ -52,6 +52,8 @@ public class Material {
         @Version
         private int version;
 
+        public Material(long l, String lettuce) {
+        }
 
 
         // ✅ 재료 정보 업데이트 메서드 추가
