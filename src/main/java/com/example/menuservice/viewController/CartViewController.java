@@ -1,13 +1,16 @@
 package com.example.menuservice.viewController;
 
 import com.example.menuservice.domain.Cart;
+import com.example.menuservice.domain.CustomCart;
 import com.example.menuservice.service.CartService;
+import com.example.menuservice.service.CustomCartService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -16,12 +19,14 @@ import java.util.List;
 public class CartViewController {
 
     private final CartService cartService;
+    private final CustomCartService customCartService;
 
     // 장바구니 페이지 렌더링
     @GetMapping
     public String viewCart(Model model, HttpSession session) {
         String sessionId = session.getId();
-        List<Cart> cartItems = cartService.getCartItems(sessionId);
+        List<Cart> cartItems = cartService.getAllCartItems();
+
 
         int totalQuantity = cartItems.stream().mapToInt(Cart::getAmount).sum();
         long totalPrice = cartItems.stream().mapToLong(item -> item.getAmount() * item.getPrice()).sum();

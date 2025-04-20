@@ -52,6 +52,8 @@ public class Bread {
         @Version
         private int version;
 
+        public Bread(long l, String wholeGrain) {
+        }
 
 
         // ✅ 빵 정보 업데이트 메서드 추가

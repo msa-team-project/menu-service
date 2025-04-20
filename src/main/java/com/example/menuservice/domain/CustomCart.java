@@ -1,6 +1,8 @@
 package com.example.menuservice.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 @Entity
@@ -15,6 +17,15 @@ public class CustomCart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long uid;
+
+    @NotNull(message = "The price must be defined.")
+    @Positive(message = "The price must be greater than zero.")
+    @Column(nullable = false)
+    private Long price;
+
+    @NotNull(message = "The calorie count must be defined.")
+    @Column(nullable = false)
+    private Double calorie;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bread_id", nullable = false)

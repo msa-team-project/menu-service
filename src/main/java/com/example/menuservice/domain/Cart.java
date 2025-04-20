@@ -38,6 +38,11 @@ public class Cart {
     @JoinColumn(name = "menu_id")
     private Menu menu;
 
+    // 커스텀 카트 외래키
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "custom_cart_id")
+    private CustomCart customCart;
+
     @Column(nullable = false)
     private String menuName;
 

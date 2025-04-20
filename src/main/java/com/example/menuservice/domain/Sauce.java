@@ -52,6 +52,8 @@ public class Sauce {
         @Version
         private int version;
 
+        public Sauce(long l, String ketchup) {
+        }
 
 
         // ✅ 소스 정보 업데이트 메서드 추가
