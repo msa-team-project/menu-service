@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:inline="javascript">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.js" crossorigin="anonymous"></script>
+    <script>
+        const kakaoApiKey = /*[[${kakaoApiKey}]]*/ "";
+    </script>
     <script th:src="@{/js/storeRegister.js}"></script>
     <link th:href="@{/css/storeRegister.css}" rel="stylesheet">
     <title>회원가입</title>
@@ -20,12 +23,12 @@
 
         <div class="form-group">
             <label for="address">주소</label>
-            <input type="text" id="address" placeholder="주소를 입력하세요" required onclick="execDaumPostcode()">
+            <input type="text" id="address" placeholder="주소를 입력하세요" required >
         </div>
 
         <div class="form-group">
             <label for="postcode">우편번호</label>
-            <input type="text" id="postcode" placeholder="우편번호를 입력하세요" required onclick="execDaumPostcode()">
+            <input type="text" id="postcode" placeholder="우편번호를 입력하세요" required>
         </div>
 
         <!-- 역할 선택 요소 추가 -->
@@ -42,15 +45,6 @@
 </div>
 
 <script src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-<script>
-function execDaumPostcode() {
-    new daum.Postcode({
-        oncomplete: function(data) {
-        document.getElementById('postcode').value = data.zonecode;
-        document.getElementById('address').value = data.address;
-    }
-  }).open();
-}
-</script>
+
 </body>
 </html>
