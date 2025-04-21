@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/sides")
+@RequestMapping("/menus/sides")
 public class SideApiController {
 
     private final SideService sideService;

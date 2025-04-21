@@ -1,6 +1,23 @@
 $(document).ready(function () {
-    // checkToken();
-    // setupAjax();
+    const vegetableName = window.location.pathname.split('/').pop();
+
+    $.ajax({
+        url: "/menus/vegetables/" + vegetableName,
+        type: "GET",
+        success: function (vegetable) {
+            $('#uid').val(vegetable.uid);
+            $('#vegetableName').val(vegetable.vegetableName);
+            $('#calorie').val(vegetable.calorie);
+            $('#price').val(vegetable.price);
+            $('#status').val(vegetable.status.toLowerCase());
+            $('#currentImg').attr('src', vegetable.img);
+            $('#imgUrl').val(vegetable.img);
+        },
+        error: function (xhr) {
+            console.error("Error:", xhr.responseText);
+            alert("야채 정보 불러오기 중 오류가 발생했습니다.");
+        }
+    });
 
     $("#updateBtn").on("click", function () {
         let fileInput = $("#img")[0].files[0];
@@ -10,7 +27,7 @@ $(document).ready(function () {
             calorie: parseFloat($("#calorie").val()),
             price: parseInt($("#price").val(), 10),
             status: $("#status").val() === "active" ? "ACTIVE" : "DELETED",
-            img: $("#imgUrl").val() // 기존 이미지 URL 유지
+            img: $("#imgUrl").val()
         };
 
         let formData = new FormData();
@@ -18,11 +35,11 @@ $(document).ready(function () {
         formData.append("vegetable", jsonBlob);
 
         if (fileInput) {
-            formData.append("file", fileInput); // 새 이미지가 있을 경우 추가
+            formData.append("file", fileInput);
         }
 
         $.ajax({
-            url: "/vegetables/" + vegetableData.vegetableName,
+            url: "/menus/vegetables/" + encodeURIComponent(vegetableData.vegetableName),
             type: "PUT",
             data: formData,
             enctype: "multipart/form-data",

@@ -4,7 +4,7 @@ $(document).ready(function () {
     // 치즈 목록 불러오기
     function loadCheeses() {
         $.ajax({
-            url: "/cheeses",
+            url: "/menus/cheeses",
             type: "GET",
             dataType: "json",
             success: function (data) {
@@ -44,7 +44,7 @@ $(document).ready(function () {
 
         if (confirm("정말 삭제하시겠습니까?")) {
             $.ajax({
-                url: "/cheeses/" + encodeURIComponent(cheeseName),
+                url: "/menus/cheeses/" + encodeURIComponent(cheeseName),
                 type: "DELETE",
                 success: function () {
                     alert("치즈가 삭제되었습니다!");

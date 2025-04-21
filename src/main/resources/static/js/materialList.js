@@ -5,7 +5,7 @@ $(document).ready(function () {
     // 재료 목록 불러오기
     function loadMaterials() {
         $.ajax({
-            url: "/materials",
+            url: "/menus/materials",
             type: "GET",
             dataType: "json",
             success: function (data) {
@@ -45,7 +45,7 @@ $(document).ready(function () {
 
         if (confirm("정말 삭제하시겠습니까?")) {
             $.ajax({
-                url: "/materials/" + encodeURIComponent(materialName),
+                url: "/menus/materials/" + encodeURIComponent(materialName),
                 type: "DELETE",
                 success: function () {
                     alert("재료가 삭제되었습니다!");

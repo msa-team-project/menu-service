@@ -4,15 +4,8 @@
     <title>장바구니</title>
     <meta charset="UTF-8">
 
-    <!-- 외부 CSS 파일 링크 -->
+    <!-- 외부 CSS -->
     <link th:href="@{/css/cartList.css}" rel="stylesheet">
-
-    <!-- jQuery 라이브러리 추가 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- 외부 JS 파일을 불러오기 -->
-    <script th:src="@{/js/common.js}"></script>
-    <script th:src="@{/js/cartList.js}"></script>
 </head>
 <body>
 <div class="cart-container">
@@ -31,15 +24,17 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="item : ${cartItems}" th:attr="data-id=${item.uid}">
-                <td><input type="checkbox" name="selectedIds" th:value="${item.uid}" class="item-checkbox"></td>
-                <td th:text="${item.menuName}" class="menu-name">메뉴 이름</td>
+            <tr th:each="item : ${cartItems}" th:data-id="${item.uid}">
+                <td>
+                    <input type="checkbox" name="selectedIds" th:value="${item.uid}" class="item-checkbox">
+                </td>
+                <td th:text="${item.menuName}" class="menu-name"></td>
                 <td>
                     <input type="number" min="1" th:value="${item.amount}" class="amount-input">
                     <button type="button" class="update-btn">변경</button>
                 </td>
-                <td class="item-price" th:text="${item.price}">0</td>
-                <td class="total-cell" th:text="${item.price * item.amount}">0</td>
+                <td class="item-price" th:text="${item.unitPrice}"></td>
+                <td class="total-cell" th:text="${item.unitPrice * item.amount}"></td>
                 <td>
                     <button type="button" class="delete-btn">삭제</button>
                 </td>
@@ -48,8 +43,8 @@
         </table>
 
         <div class="cart-summary">
-            총 수량: <span id="totalQuantity" th:text="${totalQuantity}">0</span>개 |
-            총 결제 금액: <span id="totalPrice" th:text="${totalPrice}">0</span>원
+            총 수량: <span id="totalQuantity" th:text="${totalQuantity}"></span>개 |
+            총 결제 금액: <span id="totalPrice" th:text="${totalPrice}"></span>원
         </div>
 
         <div class="cart-actions">
@@ -59,5 +54,10 @@
         </div>
     </form>
 </div>
+
+<!-- 외부 스크립트는 body 하단에 위치 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/cartList.js}"></script>
 </body>
 </html>

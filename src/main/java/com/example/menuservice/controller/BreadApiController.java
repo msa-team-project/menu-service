@@ -15,7 +15,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/breads")
+@RequestMapping("/menus/breads")
 public class BreadApiController {
 
     private final BreadService breadService;

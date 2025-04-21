@@ -1,54 +1,53 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script th:src="@{/js/common.js}"></script>
-    <script th:src="@{/js/materialEdit.js}"></script>
-    <link th:href="@{/css/commonEdit.css}" rel="stylesheet">
+    <script src="/js/common.js"></script>
+    <script src="/js/materialEdit.js"></script> <!-- 외부 JS 파일 링크 -->
+    <link href="/css/commonEdit.css" rel="stylesheet">
     <title>재료 정보 수정</title>
 </head>
 <body>
 <div class="container">
     <h1>재료 정보 수정</h1>
-    <form id="materialEditForm">
-        <input type="hidden" id="uid" name="uid" th:value="${material.uid}">
+    <form id="materialEditForm" enctype="multipart/form-data">
+        <input type="hidden" id="uid" name="uid">
 
         <div class="form-group">
             <label for="materialName">재료 이름</label>
-            <input type="text" id="materialName" name="materialName" th:value="${material.materialName}" required>
+            <input type="text" id="materialName" name="materialName" required>
         </div>
 
         <div class="form-group">
             <label for="calorie">칼로리</label>
-            <input type="number" id="calorie" name="calorie" th:value="${material.calorie}" required>
+            <input type="number" id="calorie" name="calorie" required min="0">
         </div>
 
         <div class="form-group">
             <label for="price">가격</label>
-            <input type="number" id="price" name="price" th:value="${material.price}" required>
+            <input type="number" id="price" name="price" required min="0">
         </div>
 
         <div class="form-group">
             <label for="status">상태</label>
-            <select id="status" name="status">
-                <option value="active" th:selected="${material.status == 'ACTIVE'}">활성</option>
-                <option value="deleted" th:selected="${material.status == 'DELETED'}">비활성</option>
+            <select id="status" name="status" required>
+                <option value="active">활성</option>
+                <option value="deleted">비활성</option>
             </select>
         </div>
-
 
         <div class="form-group">
             <label>현재 이미지</label>
             <br>
-            <img th:src="${material.img}" alt="빵 이미지" width="100">
+            <img id="currentImg" src="" alt="재료 이미지" width="100">
         </div>
 
         <div class="form-group">
             <label for="img">새 이미지 업로드</label>
             <input type="file" id="img" name="file" accept="image/*">
-            <input type="hidden" id="imgUrl" name="img" th:value="${material.img}">
+            <input type="hidden" id="imgUrl" name="img">
         </div>
 
         <div class="form-actions">

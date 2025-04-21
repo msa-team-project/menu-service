@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/custom-carts")
+@RequestMapping("/menus/custom-carts")
 @RequiredArgsConstructor
 public class CustomCartApiController {
 

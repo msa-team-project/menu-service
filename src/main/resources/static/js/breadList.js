@@ -1,10 +1,8 @@
 $(document).ready(function () {
-    // checkToken();
-    // setupAjax();
-    // 빵 목록 불러오기
+
     function loadBreads() {
         $.ajax({
-            url: "/breads",
+            url: "/menus/breads",  // ✅ 새 API 경로
             type: "GET",
             dataType: "json",
             success: function (data) {
@@ -33,9 +31,8 @@ $(document).ready(function () {
         });
     }
 
-    // 🔥 동적으로 생성된 삭제 버튼에도 이벤트가 적용되도록 수정!
     $(document).on("click", ".delete-btn", function () {
-        let breadName = $(this).data("breadname"); // 소문자로 변경
+        const breadName = $(this).data("breadname");
 
         if (!breadName) {
             alert("삭제할 빵 이름이 없습니다.");
@@ -44,11 +41,11 @@ $(document).ready(function () {
 
         if (confirm("정말 삭제하시겠습니까?")) {
             $.ajax({
-                url: "/breads/" + encodeURIComponent(breadName),
+                url: "/menus/breads/" + encodeURIComponent(breadName),  // ✅ 수정된 DELETE 경로
                 type: "DELETE",
                 success: function () {
                     alert("빵이 삭제되었습니다!");
-                    loadBreads(); // 목록 새로고침
+                    loadBreads();
                 },
                 error: function () {
                     alert("삭제 중 오류가 발생했습니다.");
@@ -57,6 +54,6 @@ $(document).ready(function () {
         }
     });
 
-    // 페이지 로드 시 빵 목록 불러오기
+    // 페이지 로딩 시 호출
     loadBreads();
 });

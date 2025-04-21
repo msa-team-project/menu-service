@@ -1,6 +1,23 @@
 $(document).ready(function () {
-    // checkToken();
-    // setupAjax();
+    const sauceName = window.location.pathname.split('/').pop();
+
+    $.ajax({
+        url: "/menus/sauces/" + sauceName,
+        type: "GET",
+        success: function (sauce) {
+            $('#uid').val(sauce.uid);
+            $('#sauceName').val(sauce.sauceName);
+            $('#calorie').val(sauce.calorie);
+            $('#price').val(sauce.price);
+            $('#status').val(sauce.status.toLowerCase());
+            $('#currentImg').attr('src', sauce.img);
+            $('#imgUrl').val(sauce.img);
+        },
+        error: function (xhr) {
+            console.error("Error:", xhr.responseText);
+            alert("소스 정보 불러오기 중 오류가 발생했습니다.");
+        }
+    });
 
     $("#updateBtn").on("click", function () {
         let fileInput = $("#img")[0].files[0];
@@ -10,7 +27,7 @@ $(document).ready(function () {
             calorie: parseFloat($("#calorie").val()),
             price: parseInt($("#price").val(), 10),
             status: $("#status").val() === "active" ? "ACTIVE" : "DELETED",
-            img: $("#imgUrl").val() // 기존 이미지 URL 유지
+            img: $("#imgUrl").val()
         };
 
         let formData = new FormData();
@@ -18,11 +35,11 @@ $(document).ready(function () {
         formData.append("sauce", jsonBlob);
 
         if (fileInput) {
-            formData.append("file", fileInput); // 새 이미지가 있을 경우 추가
+            formData.append("file", fileInput);
         }
 
         $.ajax({
-            url: "/sauces/" + sauceData.sauceName,
+            url: "/menus/sauces/" + encodeURIComponent(sauceData.sauceName),
             type: "PUT",
             data: formData,
             enctype: "multipart/form-data",

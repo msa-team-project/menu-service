@@ -5,7 +5,7 @@ $(document).ready(function () {
     // 야채 목록 불러오기
     function loadVegetables() {
         $.ajax({
-            url: "/vegetables",
+            url: "/menus/vegetables",
             type: "GET",
             dataType: "json",
             success: function (data) {
@@ -45,7 +45,7 @@ $(document).ready(function () {
 
         if (confirm("정말 삭제하시겠습니까?")) {
             $.ajax({
-                url: "/vegetables/" + encodeURIComponent(vegetableName),
+                url: "/menus/vegetables/" + encodeURIComponent(vegetableName),
                 type: "DELETE",
                 success: function () {
                     alert("야채가 삭제되었습니다!");

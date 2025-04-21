@@ -4,6 +4,7 @@ import com.example.menuservice.domain.*;
 import com.example.menuservice.dto.CustomCartRequestDTO;
 import com.example.menuservice.dto.CustomCartResponseDTO;
 import com.example.menuservice.exception.CustomCartNotFoundException;
+import com.example.menuservice.mapper.CustomCartMapper;
 import com.example.menuservice.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class CustomCartService {
     // 전체 커스텀카트 조회
     public List<CustomCartResponseDTO> viewCustomCartList() {
         return customCartRepository.findAll().stream()
-                .map(CustomCartResponseDTO::fromEntity)
+                .map(CustomCartMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
@@ -36,7 +37,7 @@ public class CustomCartService {
     public CustomCartResponseDTO viewCustomCart(Long uid) {
         CustomCart customCart = customCartRepository.findById(uid)
                 .orElseThrow(() -> new CustomCartNotFoundException("ID: " + uid));
-        return CustomCartResponseDTO.fromEntity(customCart);
+        return CustomCartMapper.toResponseDTO(customCart);
     }
 
     // 커스텀카트 추가
@@ -81,7 +82,7 @@ public class CustomCartService {
         cartRepository.save(cart);  // Cart 저장
 
         // 3. CustomCartResponseDTO 반환
-        return CustomCartResponseDTO.fromEntity(customCart);
+        return CustomCartMapper.toResponseDTO(customCart);
     }
 
     // 커스텀카트 삭제
