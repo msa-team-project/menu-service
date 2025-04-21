@@ -25,7 +25,7 @@ $(document).ready(function () {
         formData.append("material", jsonBlob); // 백엔드에서 @RequestPart("material")와 일치
 
         $.ajax({
-            url: "/materials",
+            url: "/menus/materials",
             type: "POST",
             data: formData,
             enctype: "multipart/form-data",

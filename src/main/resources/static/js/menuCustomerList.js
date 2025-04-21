@@ -8,7 +8,7 @@ $(document).ready(function() {
 
         $.ajax({
             type: "POST",
-            url: "/api/cart/add",
+            url: "/menus/cart/add",
             data: { menuId: menuId, amount: amount },
             success: function(response) {
                 // alert("ENJOY");

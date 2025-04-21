@@ -26,7 +26,7 @@ $(document).ready(function () {
 
         // ✅ Ajax 요청
         $.ajax({
-            url: "/sauces",
+            url: "/menus/sauces",
             type: "POST",
             data: formData,
             enctype: "multipart/form-data",

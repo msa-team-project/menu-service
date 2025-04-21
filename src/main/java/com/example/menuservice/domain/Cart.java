@@ -29,9 +29,6 @@ public class Cart {
     @Column(name = "social_uid")
     private Long socialUid;
 
-    // 비로그인 사용자의 임시 세션 ID
-    @Column(name = "session_id")
-    private String sessionId;
 
     // 어떤 메뉴를 담았는지 외래키로 연결
     @ManyToOne(fetch = FetchType.LAZY)

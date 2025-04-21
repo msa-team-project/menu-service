@@ -4,51 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script th:src="@{/js/common.js}"></script>
-  <script th:src="@{/js/breadEdit.js}"></script>
+  <script th:src="@{/js/breadEdit.js}"></script> <!-- 외부 JS 파일 링크 -->
   <link th:href="@{/css/commonEdit.css}" rel="stylesheet">
   <title>빵 정보 수정</title>
 </head>
 <body>
 <div class="container">
   <h1>빵 정보 수정</h1>
-  <form id="breadEditForm">
-    <input type="hidden" id="uid" name="uid" th:value="${bread.uid}">
+  <form id="breadEditForm" enctype="multipart/form-data">
+    <input type="hidden" id="uid" name="uid">
 
     <div class="form-group">
       <label for="breadName">빵 이름</label>
-      <input type="text" id="breadName" name="breadName" th:value="${bread.breadName}" required>
+      <input type="text" id="breadName" name="breadName" required>
     </div>
 
     <div class="form-group">
       <label for="calorie">칼로리</label>
-      <input type="number" id="calorie" name="calorie" th:value="${bread.calorie}" required>
+      <input type="number" id="calorie" name="calorie" required min="0">
     </div>
 
     <div class="form-group">
       <label for="price">가격</label>
-      <input type="number" id="price" name="price" th:value="${bread.price}" required>
+      <input type="number" id="price" name="price" required min="0">
     </div>
 
     <div class="form-group">
       <label for="status">상태</label>
-      <select id="status" name="status">
-        <option value="active" th:selected="${bread.status == 'ACTIVE'}">활성</option>
-        <option value="deleted" th:selected="${bread.status == 'DELETED'}">비활성</option>
+      <select id="status" name="status" required>
+        <option value="active">활성</option>
+        <option value="deleted">비활성</option>
       </select>
     </div>
-
 
     <div class="form-group">
       <label>현재 이미지</label>
       <br>
-      <img th:src="${bread.img}" alt="빵 이미지" width="100">
+      <img id="currentImg" alt="빵 이미지" width="100">
     </div>
 
     <div class="form-group">
       <label for="img">새 이미지 업로드</label>
       <input type="file" id="img" name="file" accept="image/*">
-      <input type="hidden" id="imgUrl" name="img" th:value="${bread.img}">
+      <input type="hidden" id="imgUrl" name="img">
     </div>
 
     <div class="form-actions">

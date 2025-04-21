@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/materials")
+@RequestMapping("/menus/materials")
 public class MaterialApiController {
 
     private final MaterialService materialService;

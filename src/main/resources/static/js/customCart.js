@@ -71,7 +71,7 @@ $(document).ready(function () {
         };
 
         $.ajax({
-            url: '/custom-carts',
+            url: '/menus/custom-carts',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(customCartDTO),

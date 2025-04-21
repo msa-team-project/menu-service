@@ -5,6 +5,7 @@ import com.example.menuservice.dto.MenuRequestDTO;
 import com.example.menuservice.dto.MenuResponseDTO;
 import com.example.menuservice.exception.MenuAlreadyExistsException;
 import com.example.menuservice.exception.MenuNotFoundException;
+import com.example.menuservice.mapper.MenuMapper;
 import com.example.menuservice.repository.*;
 import com.example.menuservice.status.MenuStatus;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +23,19 @@ public class MenuService {
 
     private final MenuRepository menuRepository;
     private final FileUploadService fileUploadService;
-
     private final BreadRepository breadRepository;
     private final MaterialRepository materialRepository;
     private final CheeseRepository cheeseRepository;
     private final VegetableRepository vegetableRepository;
     private final SauceRepository sauceRepository;
 
+
+
     public List<MenuResponseDTO> viewMenuList() {
 
 
         return menuRepository.findAll().stream()
-                .map(MenuResponseDTO::fromEntity)
+                .map(MenuMapper::toResponseDTO)
                 .collect(Collectors.toList());
 
     }
@@ -41,7 +43,8 @@ public class MenuService {
     public MenuResponseDTO viewMenu(String menuName) {
         Menu menu = menuRepository.findByMenuName(menuName)
                 .orElseThrow(() -> new MenuNotFoundException(menuName));
-        return MenuResponseDTO.fromEntity(menu);
+        return MenuMapper.toResponseDTO(menu);
+
     }
 
     @Transactional
@@ -84,7 +87,7 @@ public class MenuService {
                     .img(fileUrl)
                     .status(status.name())
                     .build();
-            return MenuResponseDTO.fromEntity(menuRepository.save(menu));
+            return MenuMapper.toResponseDTO(menuRepository.save(menu));
         } catch (Exception e) {
             if (fileUrl != null) fileUploadService.deleteFile(fileUrl);
             throw e;
@@ -128,7 +131,7 @@ public class MenuService {
                     dto.getStatus()
             );
 
-            return MenuResponseDTO.fromEntity(menu);
+            return MenuMapper.toResponseDTO(menu);
         } catch (Exception e) {
             if (fileUrl != null) fileUploadService.deleteFile(fileUrl);
             throw e;
@@ -181,4 +184,5 @@ public class MenuService {
     private Sauce getOptionalSauce(Long id) {
         return id != null ? getSauce(id) : null;
     }
+
 }

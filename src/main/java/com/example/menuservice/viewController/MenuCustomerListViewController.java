@@ -20,8 +20,7 @@ import java.util.List;
 public class MenuCustomerListViewController {
 
     private final MenuService menuService;
-    private final CartService cartService;
-    private final CustomCartService customCartService;
+
 
     // 고객용 메뉴 목록 페이지
     @GetMapping("/")
@@ -30,14 +29,4 @@ public class MenuCustomerListViewController {
         model.addAttribute("menus", menus);
         return "menuCustomerList";
     }
-    @PostMapping("/cart/add")
-    public String addToCart(@RequestParam("menuId") Long menuId,
-
-                            @RequestParam("amount") int amount
-                            ) {
-        cartService.addToCart(menuId,  amount);
-        return "redirect:/cart";  // ✅ 장바구니 목록 불러오는 GET 요청으로 리디렉션
-    }
-
-
 }
