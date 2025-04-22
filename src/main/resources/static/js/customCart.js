@@ -1,5 +1,4 @@
 $(document).ready(function () {
-
     const defaultExcludeTexts = [
         "선택 안 함", "빵을 선택하세요", "소스를 선택하세요", "재료를 선택하세요", "채소를 선택하세요"
     ];
@@ -37,6 +36,42 @@ $(document).ready(function () {
         $('input[name="calorie"]').val(totalCalorie.toFixed(1));
     }
 
+    // 재료 로딩 함수
+    const loadIngredients = () => {
+        const ingredientEndpoints = {
+            bread: { url: "/menus/ingredients/breads", nameField: "breadName" },
+            cheese: { url: "/menus/ingredients/cheeses", nameField: "cheeseName" },
+            material: { url: "/menus/ingredients/materials", nameField: "materialName" },
+            vegetable: { url: "/menus/ingredients/vegetables", nameField: "vegetableName" },
+            sauce: { url: "/menus/ingredients/sauces", nameField: "sauceName" }
+        };
+
+        const loadIngredientOptions = (type, selectorPrefix = type) => {
+            const { url, nameField } = ingredientEndpoints[type];
+
+            $.get(url, function (data) {
+                $(`select[name^="${selectorPrefix}"]`).each(function () {
+                    const select = $(this);
+                    select.empty();
+                    select.append(`<option value="">선택 안 함</option>`);
+
+                    data.forEach(item => {
+                        const name = item[nameField];
+                        const option = `<option value="${item.uid}" data-price="${item.price}" data-calorie="${item.calorie}">${name}</option>`;
+                        select.append(option);
+                    });
+                });
+            });
+        };
+
+        loadIngredientOptions("bread");
+        loadIngredientOptions("cheese");
+        loadIngredientOptions("material", "material");
+        loadIngredientOptions("vegetable", "vegetable");
+        loadIngredientOptions("sauce", "sauce");
+    };
+
+    // 장바구니 추가 Ajax 요청
     function addCustomCart() {
         const breadId = getSelectValue("bread");
         const material1Id = getSelectValue("material1");
@@ -70,6 +105,13 @@ $(document).ready(function () {
             calorie: parseFloat($('input[name="calorie"]').val()) || 0
         };
 
+        // undefined나 문자열 "undefined"를 null 처리
+        Object.keys(customCartDTO).forEach(key => {
+            if (customCartDTO[key] === "undefined" || customCartDTO[key] === undefined) {
+                customCartDTO[key] = null;
+            }
+        });
+
         $.ajax({
             url: '/menus/custom-carts',
             type: 'POST',
@@ -77,7 +119,7 @@ $(document).ready(function () {
             data: JSON.stringify(customCartDTO),
             success: function () {
                 alert('저장 완료!');
-                location.href = '/cart'; // 또는 원하는 페이지로 이동
+                location.href = '/cart';
             },
             error: function (xhr) {
                 if (xhr.status === 400 && xhr.responseJSON) {
@@ -94,17 +136,14 @@ $(document).ready(function () {
         });
     }
 
-    // 폼 제출 처리
+    // 폼 제출 시 처리
     $('#menuForm').on('submit', function (e) {
         e.preventDefault();
 
-        const breadSelected = getSelectValue("bread");
-        const material1Selected = getSelectValue("material1");
-        const vegetable1Selected = getSelectValue("vegetable1");
-        const sauce1Selected = getSelectValue("sauce1");
-        const cheeseSelected = getSelectValue("cheese");
+        const requiredFields = ["bread", "material1", "vegetable1", "sauce1", "cheese"];
+        let allSelected = requiredFields.every(name => !!getSelectValue(name));
 
-        if (!breadSelected || !material1Selected || !vegetable1Selected || !sauce1Selected || !cheeseSelected) {
+        if (!allSelected) {
             $('#warningMessage').fadeIn();
             return;
         }
@@ -113,9 +152,10 @@ $(document).ready(function () {
         addCustomCart();
     });
 
-    // 셀렉트 변경 시 계산
+    // 셀렉트 변경 시 가격/칼로리 갱신
     $('select').on('change', calculatePriceAndCalories);
 
-    // 초기 실행
+    // 페이지 로딩 시 초기 데이터 로드
+    loadIngredients();
     calculatePriceAndCalories();
 });

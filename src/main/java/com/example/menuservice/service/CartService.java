@@ -21,9 +21,16 @@ public class CartService {
     private final CartRepository cartRepository;
     private final MenuRepository menuRepository;
 
-    // Cart -> CartItemDTO 변환 메서드
+    // 서비스에서 DTO 변환
     private CartItemsDTO toCartItemDTO(Cart cart) {
-        Long unitPrice = cart.getAmount() == 0 ? 0 : cart.getPrice() / cart.getAmount();
+        Long unitPrice;
+        if (cart.getMenu() != null) {
+            unitPrice = cart.getMenu().getPrice();  // Menu 가격
+        } else if (cart.getCustomCart() != null) {
+            unitPrice = cart.getCustomCart().getPrice();  // CustomCart 가격
+        } else {
+            unitPrice = 0L;  // 예외 처리
+        }
 
         return new CartItemsDTO(
                 cart.getUid(),
@@ -34,6 +41,8 @@ public class CartService {
                 unitPrice
         );
     }
+
+
 
 
     // 장바구니 전체 조회 (DTO 변환 후 반환)

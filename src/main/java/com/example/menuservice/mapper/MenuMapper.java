@@ -56,5 +56,6 @@ public class MenuMapper {
                 .createdDate(menu.getCreatedDate())
                 .version(menu.getVersion())
                 .build();
+
     }
 }

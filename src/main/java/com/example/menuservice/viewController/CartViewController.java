@@ -1,40 +1,16 @@
 package com.example.menuservice.viewController;
 
-import com.example.menuservice.domain.Cart;
-import com.example.menuservice.domain.CustomCart;
-import com.example.menuservice.dto.CartItemsDTO;
-import com.example.menuservice.service.CartService;
-import com.example.menuservice.service.CustomCartService;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-@RequestMapping("/cart")
-@RequiredArgsConstructor
 public class CartViewController {
 
-    private final CartService cartService;
-    private final CustomCartService customCartService;
-
-    // 장바구니 페이지 렌더링
-    @GetMapping
-    public String viewCart(Model model, HttpSession session) {
-        String sessionId = session.getId();
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
-
-
-        int totalQuantity = cartItems.stream().mapToInt(CartItemsDTO::getAmount).sum();
-        long totalPrice = cartItems.stream().mapToLong(item -> item.getAmount() * item.getUnitPrice()).sum();
-
-        model.addAttribute("cartItems", cartItems);
-        model.addAttribute("totalQuantity", totalQuantity);
-        model.addAttribute("totalPrice", totalPrice);
-        return "cartList";  // Thymeleaf 템플릿 이름
+    @GetMapping("/cart")
+    public String viewCart() {
+        return "cartList"; // cartList.html
     }
 }
+
+

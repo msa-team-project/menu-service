@@ -22,81 +22,42 @@
     <input type="number" name="calorie" step="0.1" required><br>
 
     <label>빵 선택:</label>
-    <select name="bread" required>
+    <select name="bread" id="breadSelect" required>
         <option value="">빵을 선택하세요</option>
-        <option th:each="bread : ${breads}" th:value="${bread.uid}" th:text="${bread.breadName}"></option>
     </select><br>
 
     <label>메인 재료 1:</label>
-    <select name="material1">
+    <select name="material1" id="material1Select">
         <option value="">재료를 선택하세요</option>
-        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>
     </select><br>
 
-    <label>추가 재료:</label>
-    <select name="material2">
+    <label>추가 재료 2, 3:</label>
+    <select name="material2" id="material2Select">
         <option value="">선택 안 함</option>
-        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>
     </select>
-    <select name="material3">
+    <select name="material3" id="material3Select">
         <option value="">선택 안 함</option>
-        <option th:each="mat : ${materials}" th:value="${mat.uid}" th:text="${mat.materialName}"></option>
     </select><br>
 
     <label>치즈 선택:</label>
-    <select name="cheese">
+    <select name="cheese" id="cheeseSelect">
         <option value="">선택 안 함</option>
-        <option th:each="ch : ${cheeses}" th:value="${ch.uid}" th:text="${ch.cheeseName}"></option>
     </select><br>
 
     <label>채소 선택:</label>
-    <div class="select-group">
-        <select name="vegetable1">
-            <option value="">채소를 선택하세요</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable2">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable3">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable4">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable5">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable6">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable7">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
-        <select name="vegetable8">
-            <option value="">선택 안 함</option>
-            <option th:each="veg : ${vegetables}" th:value="${veg.uid}" th:text="${veg.vegetableName}"></option>
-        </select>
+    <div id="vegetableSelects">
+        <!-- JavaScript로 select 8개 동적 생성 -->
     </div><br>
 
     <label>소스 선택:</label>
-    <select name="sauce1">
+    <select name="sauce1" id="sauce1Select">
         <option value="">소스를 선택하세요</option>
-        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>
     </select>
-    <select name="sauce2">
+    <select name="sauce2" id="sauce2Select">
         <option value="">선택 안 함</option>
-        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>
     </select>
-    <select name="sauce3">
+    <select name="sauce3" id="sauce3Select">
         <option value="">선택 안 함</option>
-        <option th:each="sauce : ${sauces}" th:value="${sauce.uid}" th:text="${sauce.sauceName}"></option>
     </select><br>
 
     <label>이미지 업로드:</label>
@@ -110,7 +71,6 @@
 
     <div class="form-actions">
         <button type="submit" class="btn" id="submitBtn">등록하기</button>
-
         <button type="button" class="btn cancel-btn" onclick="location.href='/menus/list'">목록으로 가기</button>
         <button type="button" class="btn main-btn" onclick="location.href='/admin'">메인으로 가기</button>
     </div>
