@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" th:href="@{/css/menuCustomerList.css}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script th:src="@{/js/menuCustomerList.js}"></script> <!-- ✅ JS 파일 분리해서 연결 -->
+    <script th:src="@{/js/menuCustomerList.js}"></script>
 </head>
 <body>
 
@@ -23,7 +23,6 @@
 
 <!-- ✅ 메뉴 전체 컨테이너 -->
 <div class="menu-container">
-
     <!-- ✅ 커스텀 샌드위치 -->
     <div class="menu-item custom-item">
         <a href="/customCart">
@@ -36,24 +35,7 @@
         </div>
     </div>
 
-    <!-- ✅ 일반 메뉴 반복 -->
-    <div class="menu-item" th:each="menu : ${menus}">
-        <a th:href="@{'/menus/name/' + ${menu.menuName}}">
-            <img th:src="${menu.img}" alt="메뉴 이미지">
-        </a>
-        <div class="menu-info">
-            <h2 th:text="${menu.menuName}">메뉴 이름</h2>
-            <p th:text="|${menu.price}원|">가격</p>
-
-            <!-- ✅ Ajax 요청으로 바뀐 form -->
-            <form class="add-cart-form" th:attr="data-menu-id=${menu.uid}">
-<!--                <input type="number" name="amount" value="1" min="1" class="amount-input">-->
-                <input type="hidden" name="amount" value="1">
-
-                <button type="submit" class="add-to-cart-btn">주문하기</button>
-            </form>
-        </div>
-    </div>
+    <!-- ✅ 일반 메뉴는 JS에서 동적으로 삽입됨 -->
 </div>
 
 </body>
