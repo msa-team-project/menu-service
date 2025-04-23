@@ -28,67 +28,67 @@ public class CustomCart {
     private Double calorie;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bread_id", nullable = false)
+    @JoinColumn(name = "bread", nullable = false)
     private Bread bread;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material1_id", nullable = false)
+    @JoinColumn(name = "material1", nullable = false)
     private Material material1;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material2_id")
+    @JoinColumn(name = "material2")
     private Material material2;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material3_id")
+    @JoinColumn(name = "material3")
     private Material material3;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cheese_id")
+    @JoinColumn(name = "cheese")
     private Cheese cheese;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable1_id", nullable = false)
+    @JoinColumn(name = "vegetable1", nullable = false)
     private Vegetable vegetable1;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable2_id")
+    @JoinColumn(name = "vegetable2")
     private Vegetable vegetable2;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable3_id")
+    @JoinColumn(name = "vegetable3")
     private Vegetable vegetable3;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable4_id")
+    @JoinColumn(name = "vegetable4")
     private Vegetable vegetable4;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable5_id")
+    @JoinColumn(name = "vegetable5")
     private Vegetable vegetable5;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable6_id")
+    @JoinColumn(name = "vegetable6")
     private Vegetable vegetable6;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable7_id")
+    @JoinColumn(name = "vegetable7")
     private Vegetable vegetable7;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vegetable8_id")
+    @JoinColumn(name = "vegetable8")
     private Vegetable vegetable8;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sauce1_id", nullable = false)
+    @JoinColumn(name = "sauce1", nullable = false)
     private Sauce sauce1;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sauce2_id")
+    @JoinColumn(name = "sauce2")
     private Sauce sauce2;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sauce3_id")
+    @JoinColumn(name = "sauce3")
     private Sauce sauce3;
 
     @Version

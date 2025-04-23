@@ -1,9 +1,7 @@
 package com.example.menuservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 import java.time.Instant;
 
@@ -11,6 +9,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class BreadResponseDTO {
 
     private Long uid;
@@ -21,4 +20,7 @@ public class BreadResponseDTO {
     private String status;
     private Instant createdDate;
     private int version;
+
+
+
 }

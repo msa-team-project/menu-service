@@ -26,20 +26,20 @@
     </tr>
     </thead>
     <tbody id="sauceTableBody">
-    <tr th:each="sauce : ${sauces}">
-        <td th:text="${sauce.uid}"></td>
-        <td th:text="${sauce.sauceName}"></td>
-        <td th:text="${sauce.calorie}"></td>
-        <td th:text="${sauce.price}"></td>
-        <td><img th:src="${sauce.img}" alt="소스 이미지" width="50"></td>
-        <td th:text="${sauce.status}"></td>
-        <td>
-            <a th:href="@{/sauces/edit(sauceName=${sauce.sauceName})}">수정</a>
-        </td>
-        <td>
-            <button class="delete-btn" th:data-saucename="${sauce.sauceName}">삭제</button>
-        </td>
-    </tr>
+<!--    <tr th:each="sauce : ${sauces}">-->
+<!--        <td th:text="${sauce.uid}"></td>-->
+<!--        <td th:text="${sauce.sauceName}"></td>-->
+<!--        <td th:text="${sauce.calorie}"></td>-->
+<!--        <td th:text="${sauce.price}"></td>-->
+<!--        <td><img th:src="${sauce.img}" alt="소스 이미지" width="50"></td>-->
+<!--        <td th:text="${sauce.status}"></td>-->
+<!--        <td>-->
+<!--            <a th:href="@{/sauces/edit(sauceName=${sauce.sauceName})}">수정</a>-->
+<!--        </td>-->
+<!--        <td>-->
+<!--            <button class="delete-btn" th:data-saucename="${sauce.sauceName}">삭제</button>-->
+<!--        </td>-->
+<!--    </tr>-->
     </tbody>
 </table>
 <br>
