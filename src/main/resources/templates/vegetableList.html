@@ -25,20 +25,20 @@
     </tr>
     </thead>
     <tbody id="vegetableTableBody">
-    <tr th:each="vegetable : ${vegetables}">
-        <td th:text="${vegetable.uid}"></td>
-        <td th:text="${vegetable.vegetableName}"></td>
-        <td th:text="${vegetable.calorie}"></td>
-        <td th:text="${vegetable.price}"></td>
-        <td><img th:src="${vegetable.img}" alt="야채 이미지" width="50"></td>
-        <td th:text="${vegetable.status}"></td>
-        <td>
-            <a th:href="@{/vegetables/edit(vegetableName=${vegetable.vegetableName})}">수정</a>
-        </td>
-        <td>
-            <button class="delete-btn" th:data-vegetablename="${vegetable.vegetableName}">삭제</button>
-        </td>
-    </tr>
+<!--    <tr th:each="vegetable : ${vegetables}">-->
+<!--        <td th:text="${vegetable.uid}"></td>-->
+<!--        <td th:text="${vegetable.vegetableName}"></td>-->
+<!--        <td th:text="${vegetable.calorie}"></td>-->
+<!--        <td th:text="${vegetable.price}"></td>-->
+<!--        <td><img th:src="${vegetable.img}" alt="야채 이미지" width="50"></td>-->
+<!--        <td th:text="${vegetable.status}"></td>-->
+<!--        <td>-->
+<!--            <a th:href="@{/vegetables/edit(vegetableName=${vegetable.vegetableName})}">수정</a>-->
+<!--        </td>-->
+<!--        <td>-->
+<!--            <button class="delete-btn" th:data-vegetablename="${vegetable.vegetableName}">삭제</button>-->
+<!--        </td>-->
+<!--    </tr>-->
     </tbody>
 </table>
 <br>

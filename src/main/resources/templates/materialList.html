@@ -25,20 +25,20 @@
     </tr>
     </thead>
     <tbody id="materialTableBody">
-    <tr th:each="material : ${materials}">
-        <td th:text="${material.uid}"></td>
-        <td th:text="${material.materialName}"></td>
-        <td th:text="${material.calorie}"></td>
-        <td th:text="${material.price}"></td>
-        <td><img th:src="${material.img}" alt="재료 이미지" width="50"></td>
-        <td th:text="${material.status}"></td>
-        <td>
-            <a th:href="@{/materials/edit(materialName=${material.materialName})}">수정</a>
-        </td>
-        <td>
-            <button class="delete-btn" th:data-materialname="${material.materialName}">삭제</button>
-        </td>
-    </tr>
+<!--    <tr th:each="material : ${materials}">-->
+<!--        <td th:text="${material.uid}"></td>-->
+<!--        <td th:text="${material.materialName}"></td>-->
+<!--        <td th:text="${material.calorie}"></td>-->
+<!--        <td th:text="${material.price}"></td>-->
+<!--        <td><img th:src="${material.img}" alt="재료 이미지" width="50"></td>-->
+<!--        <td th:text="${material.status}"></td>-->
+<!--        <td>-->
+<!--            <a th:href="@{/materials/edit(materialName=${material.materialName})}">수정</a>-->
+<!--        </td>-->
+<!--        <td>-->
+<!--            <button class="delete-btn" th:data-materialname="${material.materialName}">삭제</button>-->
+<!--        </td>-->
+<!--    </tr>-->
     </tbody>
 </table>
 <br>

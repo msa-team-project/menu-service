@@ -1,5 +1,6 @@
 package com.example.menuservice.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,4 +22,6 @@ public class MaterialResponseDTO {
     private String status;
     private Instant createdDate;
     private int version;
+
+
 }
