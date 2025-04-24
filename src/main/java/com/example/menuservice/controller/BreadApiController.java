@@ -6,6 +6,7 @@ import com.example.menuservice.service.BreadService;
 import com.example.menuservice.service.FileUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,10 +35,12 @@ public class BreadApiController {
     }
 
     // 빵 추가
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BreadResponseDTO> addBread(
             @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
+        System.out.println("Received bread data: " + breadRequestDTO);
+        System.out.println("Received file name: " + file.getOriginalFilename());
         try {
             // ✅ 파일은 업로드하지 않고, Service에 그대로 넘긴다
             BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
@@ -48,7 +51,7 @@ public class BreadApiController {
     }
 
 
-    @PutMapping("/{breadName}")
+    @PutMapping(value = "/{breadName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BreadResponseDTO> updateBread(
             @PathVariable String breadName,
             @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
