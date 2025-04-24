@@ -55,7 +55,5 @@ public class MenuRequestDTO {
 
     private String status;
 
-    private MultipartFile file;
-
 
 }

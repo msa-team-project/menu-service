@@ -1,10 +1,12 @@
 package com.example.menuservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CartItemsDTO {
 
     private Long uid;

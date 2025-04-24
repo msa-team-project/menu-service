@@ -24,6 +24,10 @@ $(document).ready(function () {
         let jsonBlob = new Blob([JSON.stringify(cheeseData)], { type: "application/json" });
         formData.append("cheese", jsonBlob); // 백엔드에서 @RequestPart("cheese")와 일치
 
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ":", pair[1]);
+        }
+
         $.ajax({
             url: "/menus/cheeses",
             type: "POST",
