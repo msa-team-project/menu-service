@@ -37,7 +37,7 @@ public class BreadApiController {
     // 빵 추가
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BreadResponseDTO> addBread(
-            @Valid @RequestPart("bread") String breadRequestDTO,
+            @RequestPart(value = "bread") String breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         System.out.println("Received bread data: " + breadRequestDTO);
         System.out.println("Received file name: " + file.getOriginalFilename());
