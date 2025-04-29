@@ -7,6 +7,8 @@ import com.example.menuservice.dto.SideResponseDTO;
 import com.example.menuservice.exception.SideAlreadyExistsException;
 import com.example.menuservice.exception.SideNotFoundException;
 import com.example.menuservice.repository.SideRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SideService {
+
     private final SideRepository sideRepository;
     private final FileUploadService fileUploadService;
 
@@ -38,24 +41,34 @@ public class SideService {
 
     // 사이드 추가
     @Transactional
-    public SideResponseDTO addSide(SideRequestDTO sideRequestDTO, MultipartFile file) throws IOException {
+    public SideResponseDTO addSide(String sideRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (sideRepository.existsBySideName(sideRequestDTO.getSideName())) {
-                throw new SideAlreadyExistsException(sideRequestDTO.getSideName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(sideRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String sideName = jsonNode.get("sideName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (sideRepository.existsBySideName(sideName)) {
+                throw new SideAlreadyExistsException(sideName);
             }
 
-            SideStatus status = SideStatus.valueOf(sideRequestDTO.getStatus().toUpperCase());
+            SideStatus status = SideStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Side side = Side.builder()
-                    .sideName(sideRequestDTO.getSideName())
-                    .calorie(sideRequestDTO.getCalorie())
-                    .price(sideRequestDTO.getPrice())
+                    .sideName(sideName)
+                    .calorie(calorie)
+                    .price(price)
                     .status(status.name())
                     .img(fileUrl)
                     .build();
@@ -69,7 +82,7 @@ public class SideService {
         }
     }
 
-    // 사이드 삭제
+    // 사이드 삭제 (상태만 DELETED로 변경)
     @Transactional
     public void removeSide(String sideName) {
         Side side = sideRepository.findBySideName(sideName)
@@ -80,12 +93,25 @@ public class SideService {
 
     // 사이드 수정
     @Transactional
-    public SideResponseDTO editSideDetails(String sideName, SideRequestDTO sideRequestDTO, MultipartFile file) throws IOException {
-        Side side = sideRepository.findBySideName(sideName)
-                .orElseThrow(() -> new SideNotFoundException(sideName));
+    public SideResponseDTO editSideDetails(String sideName, String sideRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
-        String fileUrl = side.getImg();
         try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(sideRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String sideNameFromJson = jsonNode.get("sideName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Side side = sideRepository.findBySideName(sideName)
+                    .orElseThrow(() -> new SideNotFoundException(sideName));
+
+            fileUrl = side.getImg();
+
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -94,28 +120,20 @@ public class SideService {
             }
 
             side.updateSide(
-                    sideRequestDTO.getSideName(),
-                    sideRequestDTO.getCalorie(),
-                    sideRequestDTO.getPrice(),
+                    sideNameFromJson,
+                    calorie,
+                    price,
                     fileUrl,
-                    sideRequestDTO.getStatus()
+                    statusStr
             );
 
-            return toResponseDTO(side);
+            return toResponseDTO(sideRepository.save(side));
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
-    }
-
-    // 사이드 상태 업데이트
-    @Transactional
-    public void updateSideStatus(Long uid, String status) {
-        Side side = sideRepository.findById(uid)
-                .orElseThrow(() -> new SideNotFoundException("ID: " + uid));
-        side.setStatus(status);
     }
 
     // Side -> SideResponseDTO 변환 메서드

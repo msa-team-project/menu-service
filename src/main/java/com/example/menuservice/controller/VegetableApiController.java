@@ -35,7 +35,7 @@ public class VegetableApiController {
     // 채소 추가
     @PostMapping
     public ResponseEntity<VegetableResponseDTO> addVegetable(
-            @Valid @RequestPart("vegetable") VegetableRequestDTO vegetableRequestDTO,
+            @Valid @RequestPart("vegetable") String vegetableRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
@@ -50,7 +50,7 @@ public class VegetableApiController {
     @PutMapping("/{vegetableName}")
     public ResponseEntity<VegetableResponseDTO> updateVegetable(
             @PathVariable String vegetableName,
-            @Valid @RequestPart("vegetable") VegetableRequestDTO vegetableRequestDTO,
+            @Valid @RequestPart("vegetable") String vegetableRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

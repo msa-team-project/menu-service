@@ -7,6 +7,8 @@ import com.example.menuservice.exception.MaterialAlreadyExistsException;
 import com.example.menuservice.exception.MaterialNotFoundException;
 import com.example.menuservice.repository.MaterialRepository;
 import com.example.menuservice.status.MaterialStatus;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MaterialService {
+
     private final MaterialRepository materialRepository;
     private final FileUploadService fileUploadService;
 
@@ -38,24 +41,34 @@ public class MaterialService {
 
     // 재료 추가
     @Transactional
-    public MaterialResponseDTO addMaterial(MaterialRequestDTO materialRequestDTO, MultipartFile file) throws IOException {
+    public MaterialResponseDTO addMaterial(String materialRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (materialRepository.existsByMaterialName(materialRequestDTO.getMaterialName())) {
-                throw new MaterialAlreadyExistsException(materialRequestDTO.getMaterialName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(materialRequestJson);
+
+            // JsonNode에서 필요한 값 꺼내기
+            String materialName = jsonNode.get("materialName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (materialRepository.existsByMaterialName(materialName)) {
+                throw new MaterialAlreadyExistsException(materialName);
             }
 
-            MaterialStatus status = MaterialStatus.valueOf(materialRequestDTO.getStatus().toUpperCase());
+            MaterialStatus status = MaterialStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Material material = Material.builder()
-                    .materialName(materialRequestDTO.getMaterialName())
-                    .calorie(materialRequestDTO.getCalorie())
-                    .price(materialRequestDTO.getPrice())
+                    .materialName(materialName)
+                    .calorie(calorie)
+                    .price(price)
                     .img(fileUrl)
                     .status(status.name())
                     .build();
@@ -69,7 +82,7 @@ public class MaterialService {
         }
     }
 
-    // 재료 삭제
+    // 재료 삭제 (상태만 DELETED로 변경)
     @Transactional
     public void removeMaterial(String materialName) {
         Material material = materialRepository.findByMaterialName(materialName)
@@ -80,13 +93,25 @@ public class MaterialService {
 
     // 재료 수정
     @Transactional
-    public MaterialResponseDTO editMaterialDetails(String materialName, MaterialRequestDTO materialRequestDTO, MultipartFile file) throws IOException {
-        Material material = materialRepository.findByMaterialName(materialName)
-                .orElseThrow(() -> new MaterialNotFoundException(materialName));
-
-        String fileUrl = material.getImg();
+    public MaterialResponseDTO editMaterialDetails(String materialName, String materialRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
         try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(materialRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String materialNameFromJson = jsonNode.get("materialName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Material material = materialRepository.findByMaterialName(materialName)
+                    .orElseThrow(() -> new MaterialNotFoundException(materialName));
+
+            fileUrl = material.getImg();
+
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -95,28 +120,20 @@ public class MaterialService {
             }
 
             material.updateMaterial(
-                    materialRequestDTO.getMaterialName(),
-                    materialRequestDTO.getCalorie(),
-                    materialRequestDTO.getPrice(),
+                    materialNameFromJson,
+                    calorie,
+                    price,
                     fileUrl,
-                    materialRequestDTO.getStatus()
+                    statusStr
             );
 
-            return toResponseDTO(material);
+            return toResponseDTO(materialRepository.save(material));
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
-    }
-
-    // 재료 상태 업데이트
-    @Transactional
-    public void updateMaterialStatus(Long uid, String status) {
-        Material material = materialRepository.findById(uid)
-                .orElseThrow(() -> new MaterialNotFoundException("ID: " + uid));
-        material.setStatus(status);
     }
 
     // Material -> MaterialResponseDTO 변환 메서드

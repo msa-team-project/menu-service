@@ -35,7 +35,7 @@ public class SauceApiController {
     // 소스 추가
     @PostMapping
     public ResponseEntity<SauceResponseDTO> addSauce(
-            @Valid @RequestPart("sauce") SauceRequestDTO sauceRequestDTO,
+            @Valid @RequestPart("sauce") String sauceRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
@@ -51,7 +51,7 @@ public class SauceApiController {
     @PutMapping("/{sauceName}")
     public ResponseEntity<SauceResponseDTO> updateSauce(
             @PathVariable String sauceName,
-            @Valid @RequestPart("sauce") SauceRequestDTO sauceRequestDTO,
+            @Valid @RequestPart("sauce") String sauceRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

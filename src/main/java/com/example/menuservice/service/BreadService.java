@@ -7,6 +7,8 @@ import com.example.menuservice.dto.BreadResponseDTO;
 import com.example.menuservice.exception.BreadAlreadyExistsException;
 import com.example.menuservice.exception.BreadNotFoundException;
 import com.example.menuservice.repository.BreadRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,24 +40,34 @@ public class BreadService {
 
     // 빵 추가
     @Transactional
-    public BreadResponseDTO addBread(BreadRequestDTO breadRequestDTO, MultipartFile file) throws IOException {
+    public BreadResponseDTO addBread(String breadRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (breadRepository.existsByBreadName(breadRequestDTO.getBreadName())) {
-                throw new BreadAlreadyExistsException(breadRequestDTO.getBreadName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(breadRequestJson);
+
+            // JsonNode에서 필요한 값 꺼내기
+            String breadName = jsonNode.get("breadName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (breadRepository.existsByBreadName(breadName)) {
+                throw new BreadAlreadyExistsException(breadName);
             }
 
-            BreadStatus status = BreadStatus.valueOf(breadRequestDTO.getStatus().toUpperCase());
+            BreadStatus status = BreadStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Bread bread = Bread.builder()
-                    .breadName(breadRequestDTO.getBreadName())
-                    .calorie(breadRequestDTO.getCalorie())
-                    .price(breadRequestDTO.getPrice())
+                    .breadName(breadName)
+                    .calorie(calorie)
+                    .price(price)
                     .status(status.name())
                     .img(fileUrl)
                     .build();
@@ -69,6 +81,52 @@ public class BreadService {
         }
     }
 
+    // 빵 수정
+    @Transactional
+    public BreadResponseDTO editBreadDetails(String breadName, String breadRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
+
+        try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(breadRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String breadNameFromJson = jsonNode.get("breadName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Bread bread = breadRepository.findByBreadName(breadName)
+                    .orElseThrow(() -> new BreadNotFoundException(breadName));
+
+            fileUrl = bread.getImg();
+
+            if (file != null && !file.isEmpty()) {
+                if (fileUrl != null) {
+                    fileUploadService.deleteFile(fileUrl);
+                }
+                fileUrl = fileUploadService.uploadFile(file);
+            }
+
+            bread.updateBread(
+                    breadNameFromJson,
+                    calorie,
+                    price,
+                    fileUrl,
+                    statusStr
+            );
+
+            return toResponseDTO(breadRepository.save(bread));
+        } catch (Exception e) {
+            if (fileUrl != null) {
+                fileUploadService.deleteFile(fileUrl);
+            }
+            throw e;
+        }
+    }
+
+
     // 빵 삭제
     @Transactional
     public void removeBread(String breadName) {
@@ -78,45 +136,10 @@ public class BreadService {
         breadRepository.save(bread);
     }
 
-    // 빵 수정
-    @Transactional
-    public BreadResponseDTO editBreadDetails(String breadName, BreadRequestDTO breadRequestDTO, MultipartFile file) throws IOException {
-        Bread bread = breadRepository.findByBreadName(breadName)
-                .orElseThrow(() -> new BreadNotFoundException(breadName));
 
-        String fileUrl = bread.getImg();
-        try {
-            if (file != null && !file.isEmpty()) {
-                if (fileUrl != null) {
-                    fileUploadService.deleteFile(fileUrl);
-                }
-                fileUrl = fileUploadService.uploadFile(file);
-            }
 
-            bread.updateBread(
-                    breadRequestDTO.getBreadName(),
-                    breadRequestDTO.getCalorie(),
-                    breadRequestDTO.getPrice(),
-                    fileUrl,
-                    breadRequestDTO.getStatus()
-            );
 
-            return toResponseDTO(bread);
-        } catch (Exception e) {
-            if (fileUrl != null) {
-                fileUploadService.deleteFile(fileUrl);
-            }
-            throw e;
-        }
-    }
 
-    // 빵 상태 업데이트
-    @Transactional
-    public void updateBreadStatus(Long uid, String status) {
-        Bread bread = breadRepository.findById(uid)
-                .orElseThrow(() -> new BreadNotFoundException("ID: " + uid));
-        bread.setStatus(status);
-    }
 
     // Bread -> BreadResponseDTO 변환 메서드
     private BreadResponseDTO toResponseDTO(Bread bread) {

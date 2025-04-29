@@ -35,7 +35,7 @@ public class CheeseApiController {
     // 치즈 추가
     @PostMapping
     public ResponseEntity<CheeseResponseDTO> addCheese(
-            @Valid @RequestPart("cheese") CheeseRequestDTO cheeseRequestDTO,
+            @Valid @RequestPart("cheese") String cheeseRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
             // ❌ 파일 업로드는 Service에서
@@ -50,7 +50,7 @@ public class CheeseApiController {
     @PutMapping("/{cheeseName}")
     public ResponseEntity<CheeseResponseDTO> updateCheese(
             @PathVariable String cheeseName,
-            @Valid @RequestPart("cheese") CheeseRequestDTO cheeseRequestDTO,
+            @Valid @RequestPart("cheese") String cheeseRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
             // ❌ 파일 업로드는 Service에서

@@ -7,6 +7,8 @@ import com.example.menuservice.dto.CheeseResponseDTO;
 import com.example.menuservice.exception.CheeseAlreadyExistsException;
 import com.example.menuservice.exception.CheeseNotFoundException;
 import com.example.menuservice.repository.CheeseRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,24 +41,34 @@ public class CheeseService {
 
     // 치즈 추가
     @Transactional
-    public CheeseResponseDTO addCheese(CheeseRequestDTO cheeseRequestDTO, MultipartFile file) throws IOException {
+    public CheeseResponseDTO addCheese(String cheeseRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (cheeseRepository.existsByCheeseName(cheeseRequestDTO.getCheeseName())) {
-                throw new CheeseAlreadyExistsException(cheeseRequestDTO.getCheeseName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(cheeseRequestJson);
+
+            // JsonNode에서 필요한 값 꺼내기
+            String cheeseName = jsonNode.get("cheeseName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (cheeseRepository.existsByCheeseName(cheeseName)) {
+                throw new CheeseAlreadyExistsException(cheeseName);
             }
 
-            CheeseStatus status = CheeseStatus.valueOf(cheeseRequestDTO.getStatus().toUpperCase());
+            CheeseStatus status = CheeseStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Cheese cheese = Cheese.builder()
-                    .cheeseName(cheeseRequestDTO.getCheeseName())
-                    .calorie(cheeseRequestDTO.getCalorie())
-                    .price(cheeseRequestDTO.getPrice())
+                    .cheeseName(cheeseName)
+                    .calorie(calorie)
+                    .price(price)
                     .status(status.name())
                     .img(fileUrl)
                     .build();
@@ -81,13 +93,25 @@ public class CheeseService {
 
     // 치즈 수정
     @Transactional
-    public CheeseResponseDTO editCheeseDetails(String cheeseName, CheeseRequestDTO cheeseRequestDTO, MultipartFile file) throws IOException {
-        Cheese cheese = cheeseRepository.findByCheeseName(cheeseName)
-                .orElseThrow(() -> new CheeseNotFoundException(cheeseName));
-
-        String fileUrl = cheese.getImg();
+    public CheeseResponseDTO editCheeseDetails(String cheeseName, String cheeseRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
         try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(cheeseRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String cheeseNameFromJson = jsonNode.get("cheeseName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Cheese cheese = cheeseRepository.findByCheeseName(cheeseName)
+                    .orElseThrow(() -> new CheeseNotFoundException(cheeseName));
+
+            fileUrl = cheese.getImg();
+
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -96,28 +120,20 @@ public class CheeseService {
             }
 
             cheese.updateCheese(
-                    cheeseRequestDTO.getCheeseName(),
-                    cheeseRequestDTO.getCalorie(),
-                    cheeseRequestDTO.getPrice(),
+                    cheeseNameFromJson,
+                    calorie,
+                    price,
                     fileUrl,
-                    cheeseRequestDTO.getStatus()
+                    statusStr
             );
 
-            return toResponseDTO(cheese);
+            return toResponseDTO(cheeseRepository.save(cheese));
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
-    }
-
-    // 치즈 상태 업데이트
-    @Transactional
-    public void updateCheeseStatus(Long uid, String status) {
-        Cheese cheese = cheeseRepository.findById(uid)
-                .orElseThrow(() -> new CheeseNotFoundException("ID: " + uid));
-        cheese.setStatus(status);
     }
 
     // Cheese -> CheeseResponseDTO 변환 메서드

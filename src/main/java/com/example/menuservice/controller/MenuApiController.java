@@ -35,7 +35,7 @@ public class MenuApiController {
     // 메뉴 추가
     @PostMapping
     public ResponseEntity<MenuResponseDTO> addMenu(
-            @Valid @RequestPart("menu") MenuRequestDTO menuRequestDTO,
+            @Valid @RequestPart("menu") String menuRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
@@ -51,7 +51,7 @@ public class MenuApiController {
     @PutMapping("/{menuName}")
     public ResponseEntity<MenuResponseDTO> updateMenu(
             @PathVariable String menuName,
-            @Valid @RequestPart("menu") MenuRequestDTO menuRequestDTO,
+            @Valid @RequestPart("menu") String menuRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

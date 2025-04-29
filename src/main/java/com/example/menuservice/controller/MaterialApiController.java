@@ -35,7 +35,7 @@ public class MaterialApiController {
     // 메인 재료 추가
     @PostMapping
     public ResponseEntity<MaterialResponseDTO> addMaterial(
-            @Valid @RequestPart("material") MaterialRequestDTO materialRequestDTO,
+            @Valid @RequestPart("material") String materialRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
@@ -51,7 +51,7 @@ public class MaterialApiController {
     @PutMapping("/{materialName}")
     public ResponseEntity<MaterialResponseDTO> updateMaterial(
             @PathVariable String materialName,
-            @Valid @RequestPart("material") MaterialRequestDTO materialRequestDTO,
+            @Valid @RequestPart("material") String materialRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

@@ -35,7 +35,7 @@ public class SideApiController {
     // 사이드 추가
     @PostMapping
     public ResponseEntity<SideResponseDTO> addSide(
-            @Valid @RequestPart("side") SideRequestDTO sideRequestDTO,
+            @Valid @RequestPart("side") String sideRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
@@ -51,7 +51,7 @@ public class SideApiController {
     @PutMapping("/{sideName}")
     public ResponseEntity<SideResponseDTO> updateSide(
             @PathVariable String sideName,
-            @Valid @RequestPart("side") SideRequestDTO sideRequestDTO,
+            @Valid @RequestPart("side") String sideRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

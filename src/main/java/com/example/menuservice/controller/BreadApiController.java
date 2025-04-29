@@ -41,21 +41,21 @@ public class BreadApiController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
         System.out.println("Received bread data: " + breadRequestDTO);
         System.out.println("Received file name: " + file.getOriginalFilename());
-//        try {
-//            // ✅ 파일은 업로드하지 않고, Service에 그대로 넘긴다
-//            BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
-//            return ResponseEntity.ok(response);
-//        } catch (IOException e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-        return null;
+        try {
+            // ✅ 파일은 업로드하지 않고, Service에 그대로 넘긴다
+            BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
 
     @PutMapping(value = "/{breadName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BreadResponseDTO> updateBread(
             @PathVariable String breadName,
-            @Valid @RequestPart("bread") BreadRequestDTO breadRequestDTO,
+            @Valid @RequestPart("bread") String breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {

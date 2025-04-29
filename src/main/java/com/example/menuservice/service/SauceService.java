@@ -7,6 +7,8 @@ import com.example.menuservice.dto.SauceResponseDTO;
 import com.example.menuservice.exception.SauceAlreadyExistsException;
 import com.example.menuservice.exception.SauceNotFoundException;
 import com.example.menuservice.repository.SauceRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SauceService {
+
     private final SauceRepository sauceRepository;
     private final FileUploadService fileUploadService;
 
@@ -38,24 +41,34 @@ public class SauceService {
 
     // 소스 추가
     @Transactional
-    public SauceResponseDTO addSauce(SauceRequestDTO sauceRequestDTO, MultipartFile file) throws IOException {
+    public SauceResponseDTO addSauce(String sauceRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (sauceRepository.existsBySauceName(sauceRequestDTO.getSauceName())) {
-                throw new SauceAlreadyExistsException(sauceRequestDTO.getSauceName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(sauceRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String sauceName = jsonNode.get("sauceName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (sauceRepository.existsBySauceName(sauceName)) {
+                throw new SauceAlreadyExistsException(sauceName);
             }
 
-            SauceStatus status = SauceStatus.valueOf(sauceRequestDTO.getStatus().toUpperCase());
+            SauceStatus status = SauceStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Sauce sauce = Sauce.builder()
-                    .sauceName(sauceRequestDTO.getSauceName())
-                    .calorie(sauceRequestDTO.getCalorie())
-                    .price(sauceRequestDTO.getPrice())
+                    .sauceName(sauceName)
+                    .calorie(calorie)
+                    .price(price)
                     .status(status.name())
                     .img(fileUrl)
                     .build();
@@ -69,7 +82,7 @@ public class SauceService {
         }
     }
 
-    // 소스 삭제
+    // 소스 삭제 (상태만 DELETED로 변경)
     @Transactional
     public void removeSauce(String sauceName) {
         Sauce sauce = sauceRepository.findBySauceName(sauceName)
@@ -80,12 +93,25 @@ public class SauceService {
 
     // 소스 수정
     @Transactional
-    public SauceResponseDTO editSauceDetails(String sauceName, SauceRequestDTO sauceRequestDTO, MultipartFile file) throws IOException {
-        Sauce sauce = sauceRepository.findBySauceName(sauceName)
-                .orElseThrow(() -> new SauceNotFoundException(sauceName));
+    public SauceResponseDTO editSauceDetails(String sauceName, String sauceRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
-        String fileUrl = sauce.getImg();
         try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(sauceRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String sauceNameFromJson = jsonNode.get("sauceName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Sauce sauce = sauceRepository.findBySauceName(sauceName)
+                    .orElseThrow(() -> new SauceNotFoundException(sauceName));
+
+            fileUrl = sauce.getImg();
+
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -94,28 +120,20 @@ public class SauceService {
             }
 
             sauce.updateSauce(
-                    sauceRequestDTO.getSauceName(),
-                    sauceRequestDTO.getCalorie(),
-                    sauceRequestDTO.getPrice(),
+                    sauceNameFromJson,
+                    calorie,
+                    price,
                     fileUrl,
-                    sauceRequestDTO.getStatus()
+                    statusStr
             );
 
-            return toResponseDTO(sauce);
+            return toResponseDTO(sauceRepository.save(sauce));
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
-    }
-
-    // 소스 상태 업데이트
-    @Transactional
-    public void updateSauceStatus(Long uid, String status) {
-        Sauce sauce = sauceRepository.findById(uid)
-                .orElseThrow(() -> new SauceNotFoundException("ID: " + uid));
-        sauce.setStatus(status);
     }
 
     // Sauce -> SauceResponseDTO 변환 메서드

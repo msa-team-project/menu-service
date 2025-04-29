@@ -7,6 +7,8 @@ import com.example.menuservice.dto.VegetableResponseDTO;
 import com.example.menuservice.exception.VegetableAlreadyExistsException;
 import com.example.menuservice.exception.VegetableNotFoundException;
 import com.example.menuservice.repository.VegetableRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class VegetableService {
+
     private final VegetableRepository vegetableRepository;
     private final FileUploadService fileUploadService;
 
@@ -38,24 +41,34 @@ public class VegetableService {
 
     // 채소 추가
     @Transactional
-    public VegetableResponseDTO addVegetable(VegetableRequestDTO vegetableRequestDTO, MultipartFile file) throws IOException {
+    public VegetableResponseDTO addVegetable(String vegetableRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            if (vegetableRepository.existsByVegetableName(vegetableRequestDTO.getVegetableName())) {
-                throw new VegetableAlreadyExistsException(vegetableRequestDTO.getVegetableName());
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(vegetableRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String vegetableName = jsonNode.get("vegetableName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            if (vegetableRepository.existsByVegetableName(vegetableName)) {
+                throw new VegetableAlreadyExistsException(vegetableName);
             }
 
-            VegetableStatus status = VegetableStatus.valueOf(vegetableRequestDTO.getStatus().toUpperCase());
+            VegetableStatus status = VegetableStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
             Vegetable vegetable = Vegetable.builder()
-                    .vegetableName(vegetableRequestDTO.getVegetableName())
-                    .calorie(vegetableRequestDTO.getCalorie())
-                    .price(vegetableRequestDTO.getPrice())
+                    .vegetableName(vegetableName)
+                    .calorie(calorie)
+                    .price(price)
                     .status(status.name())
                     .img(fileUrl)
                     .build();
@@ -69,7 +82,7 @@ public class VegetableService {
         }
     }
 
-    // 채소 삭제
+    // 채소 삭제 (상태만 DELETED로 변경)
     @Transactional
     public void removeVegetable(String vegetableName) {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
@@ -80,12 +93,25 @@ public class VegetableService {
 
     // 채소 수정
     @Transactional
-    public VegetableResponseDTO editVegetableDetails(String vegetableName, VegetableRequestDTO vegetableRequestDTO, MultipartFile file) throws IOException {
-        Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
-                .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
+    public VegetableResponseDTO editVegetableDetails(String vegetableName, String vegetableRequestJson, MultipartFile file) throws IOException {
+        String fileUrl = null;
 
-        String fileUrl = vegetable.getImg();
         try {
+            // ObjectMapper로 JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(vegetableRequestJson);
+
+            // JSON에서 필요한 값 추출
+            String vegetableNameFromJson = jsonNode.get("vegetableName").asText();
+            Double calorie = jsonNode.get("calorie").asDouble();
+            int price = jsonNode.get("price").asInt();
+            String statusStr = jsonNode.get("status").asText();
+
+            Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
+                    .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
+
+            fileUrl = vegetable.getImg();
+
             if (file != null && !file.isEmpty()) {
                 if (fileUrl != null) {
                     fileUploadService.deleteFile(fileUrl);
@@ -94,28 +120,20 @@ public class VegetableService {
             }
 
             vegetable.updateVegetable(
-                    vegetableRequestDTO.getVegetableName(),
-                    vegetableRequestDTO.getCalorie(),
-                    vegetableRequestDTO.getPrice(),
+                    vegetableNameFromJson,
+                    calorie,
+                    price,
                     fileUrl,
-                    vegetableRequestDTO.getStatus()
+                    statusStr
             );
 
-            return toResponseDTO(vegetable);
+            return toResponseDTO(vegetableRepository.save(vegetable));
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
-    }
-
-    // 채소 상태 업데이트
-    @Transactional
-    public void updateVegetableStatus(Long uid, String status) {
-        Vegetable vegetable = vegetableRepository.findById(uid)
-                .orElseThrow(() -> new VegetableNotFoundException("ID: " + uid));
-        vegetable.setStatus(status);
     }
 
     // Vegetable -> VegetableResponseDTO 변환 메서드
