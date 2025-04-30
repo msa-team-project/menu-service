@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.VegetableStatus;
 import com.example.menuservice.domain.Vegetable;
 import com.example.menuservice.dto.VegetableRequestDTO;
@@ -7,14 +8,17 @@ import com.example.menuservice.dto.VegetableResponseDTO;
 import com.example.menuservice.exception.VegetableAlreadyExistsException;
 import com.example.menuservice.exception.VegetableNotFoundException;
 import com.example.menuservice.repository.VegetableRepository;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class VegetableService {
 
     private final VegetableRepository vegetableRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 채소 목록 조회
     public List<VegetableResponseDTO> viewVegetableList() {
@@ -73,7 +78,19 @@ public class VegetableService {
                     .img(fileUrl)
                     .build();
 
-            return toResponseDTO(vegetableRepository.save(vegetable));
+            vegetableRepository.save(vegetable);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("vegetable")
+                            .id(vegetable.getUid())
+                            .name(vegetable.getVegetableName())
+                            .status(vegetable.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(vegetable);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -127,7 +144,19 @@ public class VegetableService {
                     statusStr
             );
 
-            return toResponseDTO(vegetableRepository.save(vegetable));
+            vegetableRepository.save(vegetable);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("vegetable")
+                            .id(vegetable.getUid())
+                            .name(vegetable.getVegetableName())
+                            .status(vegetable.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(vegetable);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

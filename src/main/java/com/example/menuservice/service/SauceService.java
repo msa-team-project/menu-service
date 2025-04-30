@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.SauceStatus;
 import com.example.menuservice.domain.Sauce;
 import com.example.menuservice.dto.SauceRequestDTO;
@@ -7,14 +8,17 @@ import com.example.menuservice.dto.SauceResponseDTO;
 import com.example.menuservice.exception.SauceAlreadyExistsException;
 import com.example.menuservice.exception.SauceNotFoundException;
 import com.example.menuservice.repository.SauceRepository;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class SauceService {
 
     private final SauceRepository sauceRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 소스 목록 조회
     public List<SauceResponseDTO> viewSauceList() {
@@ -73,7 +78,21 @@ public class SauceService {
                     .img(fileUrl)
                     .build();
 
-            return toResponseDTO(sauceRepository.save(sauce));
+            sauceRepository.save(sauce);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("sauce")
+                            .id(sauce.getUid())
+                            .name(sauce.getSauceName())
+                            .status(sauce.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(sauce);
+
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -127,7 +146,19 @@ public class SauceService {
                     statusStr
             );
 
-            return toResponseDTO(sauceRepository.save(sauce));
+            sauceRepository.save(sauce);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("sauce")
+                            .id(sauce.getUid())
+                            .name(sauce.getSauceName())
+                            .status(sauce.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(sauce);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

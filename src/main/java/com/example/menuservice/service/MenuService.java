@@ -2,13 +2,17 @@ package com.example.menuservice.service;
 
 import com.example.menuservice.domain.*;
 import com.example.menuservice.dto.MenuResponseDTO;
+
+import com.example.menuservice.event.MenuEventDTO;
 import com.example.menuservice.exception.MenuAlreadyExistsException;
 import com.example.menuservice.exception.MenuNotFoundException;
 import com.example.menuservice.mapper.MenuMapper;
 import com.example.menuservice.repository.*;
 import com.example.menuservice.status.MenuStatus;
+import com.example.menuservice.type.EventType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,7 @@ public class MenuService {
     private final SauceRepository sauceRepository;
 
     private final ObjectMapper objectMapper; // ObjectMapper 인스턴스
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 메뉴 목록 조회
     public List<MenuResponseDTO> viewMenuList() {
@@ -93,12 +99,29 @@ public class MenuService {
                     .status(status.name())
                     .build();
 
-            return MenuMapper.toResponseDTO(menuRepository.save(menu));
+
+            menuRepository.save(menu);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("menu-add.menu-service",
+                    MenuEventDTO.builder()
+
+                            .menuId(menu.getUid())
+                            .menuName(menu.getMenuName())
+                            .status(menu.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return MenuMapper.toResponseDTO(menu);
+
+
+
         } catch (Exception e) {
             // 파일 업로드 실패 시 파일 삭제
             if (fileUrl != null) fileUploadService.deleteFile(fileUrl);
             throw e;
         }
+
     }
 
     @Transactional
@@ -121,9 +144,6 @@ public class MenuService {
                 // 새로운 파일 업로드
                 fileUrl = fileUploadService.uploadFile(file);
             }
-
-
-
 
             // 메뉴 정보 업데이트
             menu.updateMenu(
@@ -148,9 +168,24 @@ public class MenuService {
                     getOptionalSauce(menuJson.get("sauce3").asLong()),
                     fileUrl,  // 업데이트된 이미지 URL
                     menuJson.get("status").asText()
+
             );
 
+
+            menuRepository.save(menu);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("menu-update.menu-service",
+                    MenuEventDTO.builder()
+
+                            .menuId(menu.getUid())
+                            .menuName(menu.getMenuName())
+                            .status(menu.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
             return MenuMapper.toResponseDTO(menu);
+
         } catch (Exception e) {
             // 예외 발생 시 기존 이미지 삭제
             if (fileUrl != null && !fileUrl.isEmpty()) {
@@ -158,6 +193,7 @@ public class MenuService {
             }
             throw e;
         }
+
     }
 
 

@@ -1,20 +1,23 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.BreadStatus;
 import com.example.menuservice.domain.Bread;
-import com.example.menuservice.dto.BreadRequestDTO;
 import com.example.menuservice.dto.BreadResponseDTO;
 import com.example.menuservice.exception.BreadAlreadyExistsException;
 import com.example.menuservice.exception.BreadNotFoundException;
 import com.example.menuservice.repository.BreadRepository;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 public class BreadService {
     private final BreadRepository breadRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 빵 목록 조회
     public List<BreadResponseDTO> viewBreadList() {
@@ -72,7 +76,19 @@ public class BreadService {
                     .img(fileUrl)
                     .build();
 
-            return toResponseDTO(breadRepository.save(bread));
+            breadRepository.save(bread);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("bread")
+                            .id(bread.getUid())
+                            .name(bread.getBreadName())
+                            .status(bread.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(bread);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -117,13 +133,27 @@ public class BreadService {
                     statusStr
             );
 
-            return toResponseDTO(breadRepository.save(bread));
+
+            breadRepository.save(bread);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("bread")
+                            .id(bread.getUid())
+                            .name(bread.getBreadName())
+                            .status(bread.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(bread);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
         }
+
     }
 
 

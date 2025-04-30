@@ -74,4 +74,20 @@ public class CartApiController {
                     .body("장바구니 추가 실패: " + e.getMessage());
         }
     }
+
+    @PostMapping("/add/side")
+    public ResponseEntity<?> addSideToCart(@RequestParam("sideId") Long sideId,
+                                           @RequestParam("amount") int amount) {
+        try {
+            cartService.addSideToCart(sideId, amount);  // 사이드를 장바구니에 추가
+            List<CartItemsDTO> cartItems = cartService.getAllCartItems();  // 장바구니의 모든 항목을 가져옴
+            return ResponseEntity.ok(new CartResponseDTO(cartItems));  // CartResponseDTO로 반환
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("장바구니 추가 실패: " + e.getMessage());  // 예외 발생 시 에러 메시지 반환
+        }
+    }
+
+
 }
