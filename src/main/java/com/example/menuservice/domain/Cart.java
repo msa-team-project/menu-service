@@ -40,6 +40,11 @@ public class Cart {
     @JoinColumn(name = "custom_cart_id")
     private CustomCart customCart;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "side_id")
+    private Side side;
+
+
     @Column(nullable = false)
     private String menuName;
 

@@ -3,18 +3,22 @@ package com.example.menuservice.service;
 import com.example.menuservice.domain.Material;
 import com.example.menuservice.dto.MaterialRequestDTO;
 import com.example.menuservice.dto.MaterialResponseDTO;
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.exception.MaterialAlreadyExistsException;
 import com.example.menuservice.exception.MaterialNotFoundException;
 import com.example.menuservice.repository.MaterialRepository;
 import com.example.menuservice.status.MaterialStatus;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 재료 목록 조회
     public List<MaterialResponseDTO> viewMaterialList() {
@@ -73,7 +78,19 @@ public class MaterialService {
                     .status(status.name())
                     .build();
 
-            return toResponseDTO(materialRepository.save(material));
+            materialRepository.save(material);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("material")
+                            .id(material.getUid())
+                            .name(material.getMaterialName())
+                            .status(material.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(material);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -127,7 +144,20 @@ public class MaterialService {
                     statusStr
             );
 
-            return toResponseDTO(materialRepository.save(material));
+
+            materialRepository.save(material);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("material")
+                            .id(material.getUid())
+                            .name(material.getMaterialName())
+                            .status(material.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(material);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

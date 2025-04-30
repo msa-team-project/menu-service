@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.CheeseStatus;
 import com.example.menuservice.domain.Cheese;
 import com.example.menuservice.dto.CheeseRequestDTO;
@@ -7,14 +8,17 @@ import com.example.menuservice.dto.CheeseResponseDTO;
 import com.example.menuservice.exception.CheeseAlreadyExistsException;
 import com.example.menuservice.exception.CheeseNotFoundException;
 import com.example.menuservice.repository.CheeseRepository;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class CheeseService {
 
     private final CheeseRepository cheeseRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 치즈 목록 조회
     public List<CheeseResponseDTO> viewCheeseList() {
@@ -73,7 +78,20 @@ public class CheeseService {
                     .img(fileUrl)
                     .build();
 
-            return toResponseDTO(cheeseRepository.save(cheese));
+            cheeseRepository.save(cheese);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("cheese")
+                            .id(cheese.getUid())
+                            .name(cheese.getCheeseName())
+                            .status(cheese.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(cheese);
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -127,7 +145,20 @@ public class CheeseService {
                     statusStr
             );
 
-            return toResponseDTO(cheeseRepository.save(cheese));
+
+           cheeseRepository.save(cheese);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("cheese")
+                            .id(cheese.getUid())
+                            .name(cheese.getCheeseName())
+                            .status(cheese.getStatus())
+                            .eventType(EventType.UPDATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(cheese);
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

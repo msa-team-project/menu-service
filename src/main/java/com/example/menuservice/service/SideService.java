@@ -1,5 +1,6 @@
 package com.example.menuservice.service;
 
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.SideStatus;
 import com.example.menuservice.domain.Side;
 import com.example.menuservice.dto.SideRequestDTO;
@@ -7,14 +8,17 @@ import com.example.menuservice.dto.SideResponseDTO;
 import com.example.menuservice.exception.SideAlreadyExistsException;
 import com.example.menuservice.exception.SideNotFoundException;
 import com.example.menuservice.repository.SideRepository;
+import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class SideService {
 
     private final SideRepository sideRepository;
     private final FileUploadService fileUploadService;
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 사이드 목록 조회
     public List<SideResponseDTO> viewSideList() {
@@ -73,7 +78,21 @@ public class SideService {
                     .img(fileUrl)
                     .build();
 
-            return toResponseDTO(sideRepository.save(side));
+           sideRepository.save(side);
+            // 메시지 전송
+            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
+                    IngredientEventDTO.builder()
+                            .type("side")
+                            .id(side.getUid())
+                            .name(side.getSideName())
+                            .status(side.getStatus())
+                            .eventType(EventType.CREATED)
+                            .updatedAt(Instant.now())
+                            .build());
+
+            return toResponseDTO(side);
+
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

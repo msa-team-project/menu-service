@@ -45,6 +45,8 @@ dependencies {
     
 
     implementation 'software.amazon.awssdk:s3:2.20.120'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
 }
 
 dependencyManagement {
