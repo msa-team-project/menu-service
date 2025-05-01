@@ -2,7 +2,10 @@ package com.example.menuservice.controller;
 
 import com.example.menuservice.dto.CartItemsDTO;
 import com.example.menuservice.dto.CartResponseDTO;
+import com.example.menuservice.dto.SideCartRequestDTO;
+import com.example.menuservice.dto.SideRequestDTO;
 import com.example.menuservice.service.CartService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,20 +77,11 @@ public class CartApiController {
                     .body("장바구니 추가 실패: " + e.getMessage());
         }
     }
-
     @PostMapping("/add/side")
-    public ResponseEntity<?> addSideToCart(@RequestParam("sideId") Long sideId,
-                                           @RequestParam("amount") int amount) {
-        try {
-            cartService.addSideToCart(sideId, amount);  // 사이드를 장바구니에 추가
-            List<CartItemsDTO> cartItems = cartService.getAllCartItems();  // 장바구니의 모든 항목을 가져옴
-            return ResponseEntity.ok(new CartResponseDTO(cartItems));  // CartResponseDTO로 반환
-        } catch (Exception e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("장바구니 추가 실패: " + e.getMessage());  // 예외 발생 시 에러 메시지 반환
-        }
+    public ResponseEntity<?> addSideToCart(@RequestBody SideCartRequestDTO dto) {
+        cartService.addSideToCart(dto);
+        return ResponseEntity.ok(cartService.getAllCartItems());
     }
 
-
 }
+
