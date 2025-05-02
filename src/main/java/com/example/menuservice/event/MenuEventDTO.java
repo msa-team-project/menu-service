@@ -3,6 +3,7 @@ package com.example.menuservice.event;
 import com.example.menuservice.type.EventType;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Getter
@@ -10,7 +11,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MenuEventDTO {
+public class MenuEventDTO implements Serializable {
 
     private Long menuId;        // 메뉴 식별자
     private String menuName;    // 사용자 친화적 정보

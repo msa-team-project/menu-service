@@ -4,6 +4,7 @@ import com.example.menuservice.domain.Cart;
 import com.example.menuservice.domain.Menu;
 import com.example.menuservice.domain.Side;
 import com.example.menuservice.dto.CartItemsDTO;
+import com.example.menuservice.dto.SideCartRequestDTO;
 import com.example.menuservice.exception.CartItemNotFoundException;
 import com.example.menuservice.repository.CartRepository;
 import com.example.menuservice.repository.MenuRepository;
@@ -44,6 +45,7 @@ public class CartService {
                 cart.getPrice(),
                 cart.getCalorie(),
                 unitPrice
+
         );
     }
 
@@ -85,18 +87,18 @@ public class CartService {
 
     // 사이드 담기
     @Transactional
-    public void addSideToCart(Long sideId, int amount) {
-        Side side = sideRepository.findById(sideId)
-                .orElseThrow(() -> new RuntimeException("사이드를 찾을 수 없습니다."));
+    public void addSideToCart(SideCartRequestDTO dto) {
+        Side side = sideRepository.findById(dto.getUid())
+                .orElseThrow(() -> new RuntimeException("해당 사이드를 찾을 수 없습니다."));
 
-        Long totalPrice = ((long) side.getPrice() * amount);
-        Double totalCalorie = side.getCalorie() * amount;
+        int totalPrice = side.getPrice() * dto.getAmount();
+        Double totalCalorie = side.getCalorie() * dto.getAmount();
 
-        Optional<Cart> existingCart = cartRepository.findBySide(side);
+        Optional<Cart> existing = cartRepository.findBySide(side);
 
-        if (existingCart.isPresent()) {
-            Cart cart = existingCart.get();
-            cart.setAmount(cart.getAmount() + amount);
+        if (existing.isPresent()) {
+            Cart cart = existing.get();
+            cart.setAmount(cart.getAmount() + dto.getAmount());
             cart.setPrice(cart.getPrice() + totalPrice);
             cart.setCalorie(cart.getCalorie() + totalCalorie);
             cartRepository.save(cart);
@@ -104,13 +106,14 @@ public class CartService {
             Cart cart = Cart.builder()
                     .side(side)
                     .menuName(side.getSideName())
-                    .price(totalPrice)
+                    .price((long) totalPrice)
                     .calorie(totalCalorie)
-                    .amount(amount)
+                    .amount(dto.getAmount())
                     .build();
             cartRepository.save(cart);
         }
     }
+
 
     // 수량 변경
     @Transactional
