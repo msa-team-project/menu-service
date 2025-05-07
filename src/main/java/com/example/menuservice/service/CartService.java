@@ -28,12 +28,17 @@ public class CartService {
     // DTO 변환
     private CartItemsDTO toCartItemDTO(Cart cart) {
         Long unitPrice;
+        String imageUrl = null;
+
         if (cart.getMenu() != null) {
             unitPrice = cart.getMenu().getPrice();
+            imageUrl = cart.getMenu().getImg(); // S3 전체 URL이어야 함
         } else if (cart.getCustomCart() != null) {
             unitPrice = cart.getCustomCart().getPrice();
+//            imageUrl = cart.getCustomCart().getImg();
         } else if (cart.getSide() != null) {
             unitPrice = (long) cart.getSide().getPrice();
+            imageUrl = cart.getSide().getImg();
         } else {
             unitPrice = 0L;
         }
@@ -44,10 +49,12 @@ public class CartService {
                 cart.getAmount(),
                 cart.getPrice(),
                 cart.getCalorie(),
-                unitPrice
-
+                unitPrice,
+                imageUrl // 여기 설정
         );
     }
+
+
 
     // 전체 장바구니 조회
     public List<CartItemsDTO> getAllCartItems() {
@@ -142,6 +149,14 @@ public class CartService {
 
         cartRepository.save(cart);
     }
+//    public int getTotalQuantity() {
+//        // 예시: CartEntity에서 수량을 더한 값 반환
+//        List<Cart> cartItems = cartRepository.findAll(); // 모든 장바구니 아이템 조회
+//        int totalQuantity = cartItems.stream()
+//                .mapToInt(CartItem::getAmount) // 각 아이템의 수량을 더함
+//                .sum();
+//        return totalQuantity;
+//    }
 
     // 단일 항목 삭제
     @Transactional
