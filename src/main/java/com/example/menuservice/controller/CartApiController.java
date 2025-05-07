@@ -83,5 +83,10 @@ public class CartApiController {
         return ResponseEntity.ok(cartService.getAllCartItems());
     }
 
+//    @GetMapping("/quantity")
+//    public ResponseEntity<Integer> getCartQuantity() {
+//        int quantity = cartService.getTotalQuantity(); // 장바구니에 담긴 총 수량을 계산하는 서비스 호출
+//        return ResponseEntity.ok(quantity); // 수량 반환
+//    }
 }
 

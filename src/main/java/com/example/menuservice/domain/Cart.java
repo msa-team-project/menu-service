@@ -62,6 +62,9 @@ public class Cart {
     private Instant createdDate;
 
 
+    private String img;
+
+
 
     @Version
     private int version;
