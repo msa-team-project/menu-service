@@ -35,12 +35,20 @@ public class FileUploadService {
         }
 
         // UUID를 사용하여 고유한 파일명 생성
-        String uniqueFileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-        Path tempFile = Files.createTempFile("upload-", uniqueFileName);
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+// 한글을 제거하거나 안전한 ASCII 문자로 대체
+        String safeName = UUID.randomUUID() + extension;
+
+        Path tempFile = Files.createTempFile("upload-", safeName);
         Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
 
-        // S3에 업로드
-        String filePath = "uploads/" + uniqueFileName;
+        String filePath = "uploads/" + safeName;
         s3Client.putObject(
                 PutObjectRequest.builder()
                         .bucket(bucketName)
@@ -48,6 +56,7 @@ public class FileUploadService {
                         .build(),
                 tempFile
         );
+
 
         return "https://" + bucketName + ".s3.amazonaws.com/" + filePath;
     }
