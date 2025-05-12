@@ -12,6 +12,7 @@ import java.time.Instant;
 public class SideResponseDTO {
 
     private Long uid;
+
     private String sideName;
     private Double calorie;
     private int price;

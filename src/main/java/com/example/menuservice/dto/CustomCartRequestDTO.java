@@ -48,7 +48,8 @@ public class CustomCartRequestDTO {
 
     private Long sauce2;
     private Long sauce3;
-
+    private Long userUid;
+    private Long socialUid;
 
 
 
