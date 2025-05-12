@@ -25,61 +25,58 @@ public class CartService {
     private final MenuRepository menuRepository;
     private final SideRepository sideRepository;
 
-    // DTO 변환
     private CartItemsDTO toCartItemDTO(Cart cart) {
-        Long unitPrice;
+        Long unitPrice = 0L;
         String imageUrl = null;
 
         if (cart.getMenu() != null) {
             unitPrice = cart.getMenu().getPrice();
-            imageUrl = cart.getMenu().getImg(); // S3 전체 URL이어야 함
+            imageUrl = cart.getMenu().getImg();
         } else if (cart.getCustomCart() != null) {
             unitPrice = cart.getCustomCart().getPrice();
-//            imageUrl = cart.getCustomCart().getImg();
         } else if (cart.getSide() != null) {
             unitPrice = (long) cart.getSide().getPrice();
             imageUrl = cart.getSide().getImg();
-        } else {
-            unitPrice = 0L;
         }
 
-        return new CartItemsDTO(
-                cart.getUid(),
-                cart.getMenuName(),
-                cart.getAmount(),
-                cart.getPrice(),
-                cart.getCalorie(),
-                unitPrice,
-                imageUrl // 여기 설정
-        );
+        return CartItemsDTO.builder()
+                .uid(cart.getUid())
+                .userUid(cart.getUserUid())
+                .socialUid(cart.getSocialUid())
+                .menuName(cart.getMenuName())
+                .amount(cart.getAmount())
+                .totalPrice(cart.getPrice())
+                .calorie(cart.getCalorie())
+                .unitPrice(unitPrice)
+                .img(imageUrl)
+                .build();
     }
 
+    public List<CartItemsDTO> getAllCartItems(Long userUid, Long socialUid) {
+        List<Cart> carts = (userUid != null) ?
+                cartRepository.findByUserUid(userUid) :
+                cartRepository.findBySocialUid(socialUid);
 
-
-    // 전체 장바구니 조회
-    public List<CartItemsDTO> getAllCartItems() {
-        return cartRepository.findAll().stream()
-                .map(this::toCartItemDTO)
-                .collect(Collectors.toList());
+        return carts.stream().map(this::toCartItemDTO).collect(Collectors.toList());
     }
 
-    // 메뉴 담기
     @Transactional
-    public void addToCart(Long menuId, int amount) {
+    public void addToCart(Long userUid, Long socialUid, Long menuId, int amount) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다."));
 
         Long totalPrice = menu.getPrice() * amount;
         Double totalCalorie = menu.getCalorie() * amount;
 
-        Optional<Cart> existingCart = cartRepository.findByMenu(menu);
+        Optional<Cart> existingCart = (userUid != null) ?
+                cartRepository.findByMenuAndUserUid(menu, userUid) :
+                cartRepository.findByMenuAndSocialUid(menu, socialUid);
 
         if (existingCart.isPresent()) {
             Cart cart = existingCart.get();
             cart.setAmount(cart.getAmount() + amount);
             cart.setPrice(cart.getPrice() + totalPrice);
             cart.setCalorie(cart.getCalorie() + totalCalorie);
-            cartRepository.save(cart);
         } else {
             Cart cart = Cart.builder()
                     .menu(menu)
@@ -87,42 +84,44 @@ public class CartService {
                     .price(totalPrice)
                     .calorie(totalCalorie)
                     .amount(amount)
+                    .userUid(userUid)
+                    .socialUid(socialUid)
                     .build();
             cartRepository.save(cart);
         }
     }
 
-    // 사이드 담기
     @Transactional
-    public void addSideToCart(SideCartRequestDTO dto) {
-        Side side = sideRepository.findById(dto.getUid())
+    public void addSideToCart(Long userUid, Long socialUid, Long sideId, int amount) {
+        Side side = sideRepository.findById(sideId)
                 .orElseThrow(() -> new RuntimeException("해당 사이드를 찾을 수 없습니다."));
 
-        int totalPrice = side.getPrice() * dto.getAmount();
-        Double totalCalorie = side.getCalorie() * dto.getAmount();
+        long totalPrice = (long) side.getPrice() * amount;
+        Double totalCalorie = side.getCalorie() * amount;
 
-        Optional<Cart> existing = cartRepository.findBySide(side);
+        Optional<Cart> existing = (userUid != null) ?
+                cartRepository.findBySideAndUserUid(side, userUid) :
+                cartRepository.findBySideAndSocialUid(side, socialUid);
 
         if (existing.isPresent()) {
             Cart cart = existing.get();
-            cart.setAmount(cart.getAmount() + dto.getAmount());
+            cart.setAmount(cart.getAmount() + amount);
             cart.setPrice(cart.getPrice() + totalPrice);
             cart.setCalorie(cart.getCalorie() + totalCalorie);
-            cartRepository.save(cart);
         } else {
             Cart cart = Cart.builder()
                     .side(side)
                     .menuName(side.getSideName())
-                    .price((long) totalPrice)
+                    .price(totalPrice)
                     .calorie(totalCalorie)
-                    .amount(dto.getAmount())
+                    .amount(amount)
+                    .userUid(userUid)
+                    .socialUid(socialUid)
                     .build();
             cartRepository.save(cart);
         }
     }
 
-
-    // 수량 변경
     @Transactional
     public void updateAmount(Long cartId, int newAmount) {
         Cart cart = cartRepository.findById(cartId)
@@ -141,38 +140,28 @@ public class CartService {
             cart.setPrice(cart.getCustomCart().getPrice() * newAmount);
             cart.setCalorie(cart.getCustomCart().getCalorie() * newAmount);
         } else if (cart.getSide() != null) {
-            cart.setPrice(((long) cart.getSide().getPrice() * newAmount));
+            cart.setPrice((long) cart.getSide().getPrice() * newAmount);
             cart.setCalorie(cart.getSide().getCalorie() * newAmount);
-        } else {
-            throw new IllegalStateException("장바구니 항목에는 Menu, CustomCart 또는 Side가 있어야 합니다.");
         }
 
         cartRepository.save(cart);
     }
-//    public int getTotalQuantity() {
-//        // 예시: CartEntity에서 수량을 더한 값 반환
-//        List<Cart> cartItems = cartRepository.findAll(); // 모든 장바구니 아이템 조회
-//        int totalQuantity = cartItems.stream()
-//                .mapToInt(CartItem::getAmount) // 각 아이템의 수량을 더함
-//                .sum();
-//        return totalQuantity;
-//    }
 
-    // 단일 항목 삭제
     @Transactional
     public void deleteItem(Long cartId) {
         cartRepository.deleteById(cartId);
     }
 
-    // 여러 항목 삭제
     @Transactional
     public void deleteSelectedItems(List<Long> cartIds) {
         cartRepository.deleteAllById(cartIds);
     }
 
-    // 전체 장바구니 비우기
     @Transactional
-    public void clearCart() {
-        cartRepository.deleteAll();
+    public void clearCart(Long userUid, Long socialUid) {
+        List<Cart> items = (userUid != null) ?
+                cartRepository.findByUserUid(userUid) :
+                cartRepository.findBySocialUid(socialUid);
+        cartRepository.deleteAll(items);
     }
 }

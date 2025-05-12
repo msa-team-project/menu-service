@@ -26,26 +26,28 @@ public class CustomCartService {
     private final VegetableRepository vegetableRepository;
     private final SauceRepository sauceRepository;
 
-    // 전체 커스텀카트 조회
+    // ✅ 전체 커스텀카트 조회
     public List<CustomCartResponseDTO> viewCustomCartList() {
         return customCartRepository.findAll().stream()
                 .map(CustomCartMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // 단일 커스텀카트 조회
+    // ✅ 단일 커스텀카트 조회
     public CustomCartResponseDTO viewCustomCart(Long uid) {
         CustomCart customCart = customCartRepository.findById(uid)
                 .orElseThrow(() -> new CustomCartNotFoundException("ID: " + uid));
         return CustomCartMapper.toResponseDTO(customCart);
     }
 
-    // 커스텀카트 추가
+    // ✅ 커스텀카트 생성 및 장바구니에 추가
     @Transactional
     public CustomCartResponseDTO addCustomCart(CustomCartRequestDTO dto) {
         if (dto.getBread() == null || dto.getMaterial1() == null) {
             throw new IllegalArgumentException("Bread or Material1 ID must not be null");
         }
+        Long userUid = dto.getUserUid();
+        Long socialUid = dto.getSocialUid();
 
         // 1. CustomCart 생성
         CustomCart customCart = CustomCart.builder()
@@ -69,23 +71,26 @@ public class CustomCartService {
                 .calorie(dto.getCalorie())
                 .build();
 
-        customCart = customCartRepository.save(customCart);  // CustomCart 저장
+        customCart = customCartRepository.save(customCart);
 
-        // 2. Cart에 추가
-        Cart cart = new Cart();
-        cart.setCustomCart(customCart);  // CustomCart와 Cart 관계 설정
-        cart.setPrice(customCart.getPrice());
-        cart.setCalorie(customCart.getCalorie());
-        cart.setAmount(1);  // 예시로 1개 추가
-        cart.setMenuName("커스텀 샌드위치");
+        // 2. Cart에 사용자 정보 포함하여 추가
+        Cart cart = Cart.builder()
+                .customCart(customCart)
+                .menuName("커스텀 샌드위치")
+                .price(customCart.getPrice())
+                .calorie(customCart.getCalorie())
+                .amount(1)
+                .userUid(userUid)
+                .socialUid(socialUid)
+                .build();
 
-        cartRepository.save(cart);  // Cart 저장
+        cartRepository.save(cart);
 
-        // 3. CustomCartResponseDTO 반환
+        // 3. 응답 반환
         return CustomCartMapper.toResponseDTO(customCart);
     }
 
-    // 커스텀카트 삭제
+    // ✅ 커스텀카트 삭제
     @Transactional
     public void removeCustomCart(Long uid) {
         CustomCart customCart = customCartRepository.findById(uid)
@@ -95,11 +100,13 @@ public class CustomCartService {
 
     // === Entity fetch helpers ===
     private Bread getBread(Long id) {
-        return breadRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Bread not found: " + id));
+        return breadRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bread not found: " + id));
     }
 
     private Material getMaterial(Long id) {
-        return materialRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Material not found: " + id));
+        return materialRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Material not found: " + id));
     }
 
     private Material getOptionalMaterial(Long id) {
@@ -111,7 +118,8 @@ public class CustomCartService {
     }
 
     private Vegetable getVegetable(Long id) {
-        return vegetableRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Vegetable not found: " + id));
+        return vegetableRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Vegetable not found: " + id));
     }
 
     private Vegetable getOptionalVegetable(Long id) {
@@ -119,7 +127,8 @@ public class CustomCartService {
     }
 
     private Sauce getSauce(Long id) {
-        return sauceRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Sauce not found: " + id));
+        return sauceRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Sauce not found: " + id));
     }
 
     private Sauce getOptionalSauce(Long id) {
