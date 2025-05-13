@@ -10,6 +10,8 @@ import lombok.*;
 public class SideCartRequestDTO {
 
     private Long uid;
+    private Long userUid;
+    private Long socialUid;
     private String sideName;
     private int amount;
     private Long totalPrice;

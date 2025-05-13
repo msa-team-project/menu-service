@@ -10,6 +10,8 @@ import lombok.*;
 public class CartItemsDTO {
 
     private Long uid;
+    private Long userUid;
+    private Long socialUid;
     private String menuName;
     private int amount;
     private Long totalPrice;

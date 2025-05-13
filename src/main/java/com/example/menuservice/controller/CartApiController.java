@@ -19,57 +19,70 @@ public class CartApiController {
 
     private final CartService cartService;
 
-    // 장바구니 전체 조회
+    // 🛒 장바구니 전체 조회
     @GetMapping
-    public ResponseEntity<?> getCartItems() {
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+    public ResponseEntity<?> getCartItems(@RequestParam(required = false) Long userUid,
+                                          @RequestParam(required = false) Long socialUid) {
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
         return ResponseEntity.ok(new CartResponseDTO(cartItems));
     }
 
-    // 장바구니 항목 수량 변경
+    // 🧾 수량 변경
     @PostMapping("/update/{id}")
-    public ResponseEntity<?> updateCartItem(@PathVariable Long id, @RequestParam("amount") int amount) {
+    public ResponseEntity<?> updateCartItem(@PathVariable Long id,
+                                            @RequestParam("amount") int amount,
+                                            @RequestParam(required = false) Long userUid,
+                                            @RequestParam(required = false) Long socialUid) {
         cartService.updateAmount(id, amount);
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
         return ResponseEntity.ok(new CartResponseDTO(cartItems));
     }
 
-    // 장바구니 항목 단건 삭제
+    // ❌ 단일 항목 삭제
     @PostMapping("/delete/{id}")
-    public ResponseEntity<?> deleteCartItem(@PathVariable Long id) {
+    public ResponseEntity<?> deleteCartItem(@PathVariable Long id,
+                                            @RequestParam(required = false) Long userUid,
+                                            @RequestParam(required = false) Long socialUid) {
         cartService.deleteItem(id);
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
         return ResponseEntity.ok(new CartResponseDTO(cartItems));
     }
 
-    // 선택 항목들 삭제
+    // ❌ 선택 항목 삭제
     @PostMapping("/delete-selected")
-    public ResponseEntity<?> deleteSelectedItems(@RequestParam List<Long> selectedIds) {
+    public ResponseEntity<?> deleteSelectedItems(@RequestParam List<Long> selectedIds,
+                                                 @RequestParam(required = false) Long userUid,
+                                                 @RequestParam(required = false) Long socialUid) {
         cartService.deleteSelectedItems(selectedIds);
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
         return ResponseEntity.ok(new CartResponseDTO(cartItems));
     }
 
-    // 결제 처리
+    // ✅ 결제 완료 시 장바구니 전체 삭제
     @PostMapping("/order/checkout")
-    public ResponseEntity<?> checkout() {
-        List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+    public ResponseEntity<?> checkout(@RequestParam(required = false) Long userUid,
+                                      @RequestParam(required = false) Long socialUid) {
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
 
         if (cartItems.isEmpty()) {
             return ResponseEntity.badRequest().body("장바구니가 비어 있습니다.");
         }
 
-        cartService.clearCart();
-        return ResponseEntity.ok(new CartResponseDTO(List.of())); // 비운 후 빈 배열 반환
+        cartService.clearCart(userUid, socialUid);
+        return ResponseEntity.ok(new CartResponseDTO(List.of()));
     }
 
-    // 장바구니에 항목 추가
+    // ➕ 메뉴 추가
     @PostMapping("/add")
     public ResponseEntity<?> addToCart(@RequestParam("menuId") Long menuId,
-                                       @RequestParam("amount") int amount) {
+                                       @RequestParam("amount") int amount,
+                                       @RequestParam(required = false) Long userUid,
+                                       @RequestParam(required = false) Long socialUid) {
         try {
-            cartService.addToCart(menuId, amount);
-            List<CartItemsDTO> cartItems = cartService.getAllCartItems();
+            System.out.println("userUid = " + userUid); // 출력 확인용
+            System.out.println("socialUid = " + socialUid);
+            cartService.addToCart(userUid, socialUid, menuId, amount);
+            List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
             return ResponseEntity.ok(new CartResponseDTO(cartItems));
         } catch (Exception e) {
             return ResponseEntity
@@ -77,16 +90,15 @@ public class CartApiController {
                     .body("장바구니 추가 실패: " + e.getMessage());
         }
     }
+
+    // ➕ 사이드 추가
     @PostMapping("/add/side")
-    public ResponseEntity<?> addSideToCart(@RequestBody SideCartRequestDTO dto) {
-        cartService.addSideToCart(dto);
-        return ResponseEntity.ok(cartService.getAllCartItems());
+    public ResponseEntity<?> addSideToCart(@RequestParam(value = "sideId", required = false) Long sideId,
+                                           @RequestParam("amount") int amount,
+                                           @RequestParam(required = false) Long userUid,
+                                           @RequestParam(required = false) Long socialUid) {
+        cartService.addSideToCart(userUid, socialUid, sideId, amount);
+        List<CartItemsDTO> cartItems = cartService.getAllCartItems(userUid, socialUid);
+        return ResponseEntity.ok(new CartResponseDTO(cartItems));
     }
-
-//    @GetMapping("/quantity")
-//    public ResponseEntity<Integer> getCartQuantity() {
-//        int quantity = cartService.getTotalQuantity(); // 장바구니에 담긴 총 수량을 계산하는 서비스 호출
-//        return ResponseEntity.ok(quantity); // 수량 반환
-//    }
 }
-
