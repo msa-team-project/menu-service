@@ -78,7 +78,7 @@ public class VegetableService {
                     .img(fileUrl)
                     .build();
 
-            vegetableRepository.save(vegetable);
+//            vegetableRepository.save(vegetable);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()
@@ -144,7 +144,7 @@ public class VegetableService {
                     statusStr
             );
 
-            vegetableRepository.save(vegetable);
+//            vegetableRepository.save(vegetable);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-update.menu-service",
                     IngredientEventDTO.builder()

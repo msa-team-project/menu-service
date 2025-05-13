@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cheese")
@@ -47,7 +48,7 @@ public class Cheese {
         @Column(name = "created_date", updatable = false)
         @Temporal(TemporalType.TIMESTAMP)
         @CreatedDate
-        private Instant createdDate;
+        private LocalDateTime createdDate;
 
         @Version
         private int version;

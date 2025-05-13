@@ -78,7 +78,7 @@ public class SauceService {
                     .img(fileUrl)
                     .build();
 
-            sauceRepository.save(sauce);
+//            sauceRepository.save(sauce);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()
@@ -146,7 +146,7 @@ public class SauceService {
                     statusStr
             );
 
-            sauceRepository.save(sauce);
+//            sauceRepository.save(sauce);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-update.menu-service",
                     IngredientEventDTO.builder()
