@@ -4,8 +4,7 @@ import com.example.menuservice.domain.Menu;
 import lombok.*;
 
 import java.time.Instant;
-
-
+import java.time.LocalDateTime;
 
 
 @Getter
@@ -75,6 +74,6 @@ public class MenuResponseDTO {
 
     private String img;
     private String status;
-    private Instant createdDate;
+    private LocalDateTime createdDate;
     private int version;
 }

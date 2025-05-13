@@ -3,6 +3,7 @@ package com.example.menuservice.dto;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -18,6 +19,6 @@ public class SideResponseDTO {
     private int price;
     private String img;
     private String status;
-    private Instant createdDate;
+    private LocalDateTime createdDate;
     private int version;
 }

@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cart")
@@ -59,7 +60,7 @@ public class Cart {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private Instant createdDate;
+    private LocalDateTime createdDate;
 
 
     private String img;

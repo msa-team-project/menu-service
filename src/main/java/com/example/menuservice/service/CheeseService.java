@@ -78,7 +78,7 @@ public class CheeseService {
                     .img(fileUrl)
                     .build();
 
-            cheeseRepository.save(cheese);
+//            cheeseRepository.save(cheese);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()
@@ -146,7 +146,7 @@ public class CheeseService {
             );
 
 
-           cheeseRepository.save(cheese);
+//           cheeseRepository.save(cheese);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-update.menu-service",
                     IngredientEventDTO.builder()
