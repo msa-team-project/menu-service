@@ -78,7 +78,7 @@ public class SideService {
                     .img(fileUrl)
                     .build();
 
-           sideRepository.save(side);
+//           sideRepository.save(side);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()

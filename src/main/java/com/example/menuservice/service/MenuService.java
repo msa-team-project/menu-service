@@ -100,7 +100,7 @@ public class MenuService {
                     .build();
 
 
-            menuRepository.save(menu);
+//            menuRepository.save(menu);
             // 메시지 전송
             rabbitTemplate.convertAndSend("menu-add.menu-service",
                     MenuEventDTO.builder()
@@ -172,7 +172,7 @@ public class MenuService {
             );
 
 
-            menuRepository.save(menu);
+//            menuRepository.save(menu);
             // 메시지 전송
             rabbitTemplate.convertAndSend("menu-update.menu-service",
                     MenuEventDTO.builder()

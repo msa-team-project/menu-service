@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ public class VegetableResponseDTO {
     private int price;
     private String img;
     private String status;
-    private Instant createdDate;
+    private LocalDateTime createdDate;
     private int version;
 
 

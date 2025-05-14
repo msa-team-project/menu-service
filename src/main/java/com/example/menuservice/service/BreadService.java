@@ -76,7 +76,7 @@ public class BreadService {
                     .img(fileUrl)
                     .build();
 
-            breadRepository.save(bread);
+//            breadRepository.save(bread);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()
@@ -134,7 +134,7 @@ public class BreadService {
             );
 
 
-            breadRepository.save(bread);
+//            breadRepository.save(bread);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-update.menu-service",
                     IngredientEventDTO.builder()

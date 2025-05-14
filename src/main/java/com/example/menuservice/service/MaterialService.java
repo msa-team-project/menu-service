@@ -78,7 +78,7 @@ public class MaterialService {
                     .status(status.name())
                     .build();
 
-            materialRepository.save(material);
+//            materialRepository.save(material);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-add.menu-service",
                     IngredientEventDTO.builder()
@@ -145,7 +145,7 @@ public class MaterialService {
             );
 
 
-            materialRepository.save(material);
+//            materialRepository.save(material);
             // 메시지 전송
             rabbitTemplate.convertAndSend("ingredient-update.menu-service",
                     IngredientEventDTO.builder()
