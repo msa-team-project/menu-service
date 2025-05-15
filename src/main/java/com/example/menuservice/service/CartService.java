@@ -49,6 +49,7 @@ public class CartService {
                 .calorie(cart.getCalorie())
                 .unitPrice(unitPrice)
                 .img(imageUrl)
+                .customCartUid(cart.getCustomCart() != null ? cart.getCustomCart().getUid() : null)
                 .build();
     }
 

@@ -18,6 +18,7 @@ public class CartItemsDTO {
     private Double calorie;
     private Long unitPrice;  // ✅ 추가
     private String img;
+    private Long customCartUid;
 }
 
 
