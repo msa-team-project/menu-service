@@ -2,23 +2,23 @@ package com.example.menuservice.service;
 
 import com.example.menuservice.domain.*;
 import com.example.menuservice.dto.MenuResponseDTO;
-
 import com.example.menuservice.event.MenuEventDTO;
 import com.example.menuservice.exception.MenuAlreadyExistsException;
 import com.example.menuservice.exception.MenuNotFoundException;
 import com.example.menuservice.mapper.MenuMapper;
 import com.example.menuservice.repository.*;
+import com.example.menuservice.sqs.SqsConfig;
 import com.example.menuservice.status.MenuStatus;
 import com.example.menuservice.type.EventType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -37,8 +37,9 @@ public class MenuService {
     private final VegetableRepository vegetableRepository;
     private final SauceRepository sauceRepository;
 
-    private final ObjectMapper objectMapper; // ObjectMapper 인스턴스
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
+    private final ObjectMapper objectMapper;
+    private final SqsClient sqsClient;
+    private final SqsConfig sqsConfig;
 
     // 메뉴 목록 조회
     public List<MenuResponseDTO> viewMenuList() {
@@ -47,7 +48,7 @@ public class MenuService {
                 .collect(Collectors.toList());
     }
 
-    // 메뉴 이름으로 소스 조회
+    // 단일 메뉴 조회
     public MenuResponseDTO viewMenu(String menuName) {
         Menu menu = menuRepository.findByMenuName(menuName)
                 .orElseThrow(() -> new MenuNotFoundException(menuName));
@@ -57,11 +58,8 @@ public class MenuService {
     @Transactional
     public MenuResponseDTO addMenu(@Valid String menuRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
-
-        // JSON 데이터를 ObjectMapper로 파싱
         JsonNode menuJson = objectMapper.readTree(menuRequestJson);
 
-        // Menu 이름으로 존재 여부 확인
         String menuName = menuJson.get("menuName").asText();
         if (menuRepository.existsByMenuName(menuName)) {
             throw new MenuAlreadyExistsException(menuName);
@@ -72,56 +70,15 @@ public class MenuService {
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            MenuStatus status = MenuStatus.valueOf(menuJson.get("status").asText().toUpperCase());
+            Menu menu = buildMenuFromJson(menuJson, fileUrl);
 
-            // 메뉴 엔티티 생성
-            Menu menu = Menu.builder()
-                    .menuName(menuName)
-                    .price(menuJson.get("price").asLong())
-                    .calorie(menuJson.get("calorie").asDouble())
-                    .bread(getBread(menuJson.get("bread").asLong()))
-                    .material1(getMaterial(menuJson.get("material1").asLong()))
-                    .material2(getOptionalMaterial(menuJson.get("material2").asLong()))
-                    .material3(getOptionalMaterial(menuJson.get("material3").asLong()))
-                    .cheese(getOptionalCheese(menuJson.get("cheese").asLong()))
-                    .vegetable1(getVegetable(menuJson.get("vegetable1").asLong()))
-                    .vegetable2(getOptionalVegetable(menuJson.get("vegetable2").asLong()))
-                    .vegetable3(getOptionalVegetable(menuJson.get("vegetable3").asLong()))
-                    .vegetable4(getOptionalVegetable(menuJson.get("vegetable4").asLong()))
-                    .vegetable5(getOptionalVegetable(menuJson.get("vegetable5").asLong()))
-                    .vegetable6(getOptionalVegetable(menuJson.get("vegetable6").asLong()))
-                    .vegetable7(getOptionalVegetable(menuJson.get("vegetable7").asLong()))
-                    .vegetable8(getOptionalVegetable(menuJson.get("vegetable8").asLong()))
-                    .sauce1(getSauce(menuJson.get("sauce1").asLong()))
-                    .sauce2(getOptionalSauce(menuJson.get("sauce2").asLong()))
-                    .sauce3(getOptionalSauce(menuJson.get("sauce3").asLong()))
-                    .img(fileUrl)
-                    .status(status.name())
-                    .build();
-
-
-//            menuRepository.save(menu);
-            // 메시지 전송
-            rabbitTemplate.convertAndSend("menu-add.menu-service",
-                    MenuEventDTO.builder()
-
-                            .menuId(menu.getUid())
-                            .menuName(menu.getMenuName())
-                            .status(menu.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+            sendMenuEvent(menu, EventType.CREATED);
 
             return MenuMapper.toResponseDTO(menu);
-
-
-
         } catch (Exception e) {
-            // 파일 업로드 실패 시 파일 삭제
-            if (fileUrl != null) fileUploadService.deleteFile(fileUrl);
+            deleteUploadedFileSafely(fileUrl);
             throw e;
         }
-
     }
 
     @Transactional
@@ -129,73 +86,51 @@ public class MenuService {
         Menu menu = menuRepository.findByMenuName(menuName)
                 .orElseThrow(() -> new MenuNotFoundException(menuName));
 
-         String fileUrl = menu.getImg();
+        String fileUrl = menu.getImg();
 
         try {
-            // JSON 데이터를 ObjectMapper로 파싱
             JsonNode menuJson = objectMapper.readTree(menuRequestJson);
 
-            // 새로운 파일이 업로드된 경우에만 처리
             if (file != null && !file.isEmpty()) {
-                // 기존 이미지가 있다면 삭제
                 if (fileUrl != null) {
-                    fileUploadService.deleteFile(fileUrl);  // 기존 이미지 삭제
+                    fileUploadService.deleteFile(fileUrl);
                 }
-                // 새로운 파일 업로드
                 fileUrl = fileUploadService.uploadFile(file);
             }
 
-            // 메뉴 정보 업데이트
             menu.updateMenu(
                     menuJson.get("menuName").asText(),
                     menuJson.get("price").asLong(),
                     menuJson.get("calorie").asDouble(),
                     getBread(menuJson.get("bread").asLong()),
                     getMaterial(menuJson.get("material1").asLong()),
-                    getOptionalMaterial(menuJson.get("material2").asLong()),
-                    getOptionalMaterial(menuJson.get("material3").asLong()),
-                    getOptionalCheese(menuJson.get("cheese").asLong()),
+                    getOptionalEntity(menuJson, "material2", this::getMaterial),
+                    getOptionalEntity(menuJson, "material3", this::getMaterial),
+                    getOptionalEntity(menuJson, "cheese", this::getCheese),
                     getVegetable(menuJson.get("vegetable1").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable2").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable3").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable4").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable5").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable6").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable7").asLong()),
-                    getOptionalVegetable(menuJson.get("vegetable8").asLong()),
+                    getOptionalEntity(menuJson, "vegetable2", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable3", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable4", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable5", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable6", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable7", this::getVegetable),
+                    getOptionalEntity(menuJson, "vegetable8", this::getVegetable),
                     getSauce(menuJson.get("sauce1").asLong()),
-                    getOptionalSauce(menuJson.get("sauce2").asLong()),
-                    getOptionalSauce(menuJson.get("sauce3").asLong()),
-                    fileUrl,  // 업데이트된 이미지 URL
+                    getOptionalEntity(menuJson, "sauce2", this::getSauce),
+                    getOptionalEntity(menuJson, "sauce3", this::getSauce),
+                    fileUrl,
                     menuJson.get("status").asText()
-
             );
 
-
-//            menuRepository.save(menu);
-            // 메시지 전송
-            rabbitTemplate.convertAndSend("menu-update.menu-service",
-                    MenuEventDTO.builder()
-
-                            .menuId(menu.getUid())
-                            .menuName(menu.getMenuName())
-                            .status(menu.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build());
+            sendMenuEvent(menu, EventType.UPDATED);
 
             return MenuMapper.toResponseDTO(menu);
 
         } catch (Exception e) {
-            // 예외 발생 시 기존 이미지 삭제
-            if (fileUrl != null && !fileUrl.isEmpty()) {
-                fileUploadService.deleteFile(fileUrl);
-            }
+            deleteUploadedFileSafely(fileUrl);
             throw e;
         }
-
     }
-
 
     @Transactional
     public void removeMenu(String menuName) {
@@ -211,7 +146,7 @@ public class MenuService {
         menu.setStatus(status);
     }
 
-    // === Entity fetch helpers ===
+    // === 내부 도우미 메서드 ===
     private Bread getBread(Long id) {
         return breadRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Bread not found: " + id));
     }
@@ -220,27 +155,83 @@ public class MenuService {
         return materialRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Material not found: " + id));
     }
 
-    private Material getOptionalMaterial(Long id) {
-        return id != null && id != 0 ? getMaterial(id) : null;
-    }
-
-    private Cheese getOptionalCheese(Long id) {
-        return id != null && id != 0 ? cheeseRepository.findById(id).orElse(null) : null;
+    private Cheese getCheese(Long id) {
+        return cheeseRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Cheese not found: " + id));
     }
 
     private Vegetable getVegetable(Long id) {
         return vegetableRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Vegetable not found: " + id));
     }
 
-    private Vegetable getOptionalVegetable(Long id) {
-        return id != null && id != 0 ? getVegetable(id) : null;
-    }
-
     private Sauce getSauce(Long id) {
         return sauceRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Sauce not found: " + id));
     }
 
-    private Sauce getOptionalSauce(Long id) {
-        return id != null && id != 0 ? getSauce(id) : null;
+    private Menu buildMenuFromJson(JsonNode json, String fileUrl) {
+        MenuStatus status = MenuStatus.valueOf(json.get("status").asText().toUpperCase());
+
+        return Menu.builder()
+                .menuName(json.get("menuName").asText())
+                .price(json.get("price").asLong())
+                .calorie(json.get("calorie").asDouble())
+                .bread(getBread(json.get("bread").asLong()))
+                .material1(getMaterial(json.get("material1").asLong()))
+                .material2(getOptionalEntity(json, "material2", this::getMaterial))
+                .material3(getOptionalEntity(json, "material3", this::getMaterial))
+                .cheese(getOptionalEntity(json, "cheese", this::getCheese))
+                .vegetable1(getVegetable(json.get("vegetable1").asLong()))
+                .vegetable2(getOptionalEntity(json, "vegetable2", this::getVegetable))
+                .vegetable3(getOptionalEntity(json, "vegetable3", this::getVegetable))
+                .vegetable4(getOptionalEntity(json, "vegetable4", this::getVegetable))
+                .vegetable5(getOptionalEntity(json, "vegetable5", this::getVegetable))
+                .vegetable6(getOptionalEntity(json, "vegetable6", this::getVegetable))
+                .vegetable7(getOptionalEntity(json, "vegetable7", this::getVegetable))
+                .vegetable8(getOptionalEntity(json, "vegetable8", this::getVegetable))
+                .sauce1(getSauce(json.get("sauce1").asLong()))
+                .sauce2(getOptionalEntity(json, "sauce2", this::getSauce))
+                .sauce3(getOptionalEntity(json, "sauce3", this::getSauce))
+                .img(fileUrl)
+                .status(status.name())
+                .build();
+    }
+
+    private <T> T getOptionalEntity(JsonNode json, String field, java.util.function.Function<Long, T> fetcher) {
+        JsonNode node = json.get(field);
+        if (node == null || node.isNull()) return null;
+        long id = node.asLong();
+        return (id == 0L) ? null : fetcher.apply(id);
+    }
+
+    private void sendMenuEvent(Menu menu, EventType type) {
+        try {
+//            MenuEventDTO event = MenuEventDTO.builder()
+//                    .menuId(menu.getUid())
+//                    .menuName(menu.getMenuName())
+//                    .status(menu.getStatus())
+//                    .eventType(type)
+//                    .updatedAt(Instant.now())
+//                    .build();
+
+            String messageBody = objectMapper.writeValueAsString(menu);
+
+            SendMessageRequest request = SendMessageRequest.builder()
+                    .queueUrl(sqsConfig.getQueueUrl())
+                    .messageBody(messageBody)
+                    .build();
+
+            sqsClient.sendMessage(request);
+        } catch (Exception e) {
+            throw new RuntimeException("SQS 전송 실패", e);
+        }
+    }
+
+    private void deleteUploadedFileSafely(String fileUrl) {
+        if (fileUrl != null && !fileUrl.isEmpty()) {
+            try {
+                fileUploadService.deleteFile(fileUrl);
+            } catch (Exception ignore) {
+                // 로깅만 해도 충분
+            }
+        }
     }
 }

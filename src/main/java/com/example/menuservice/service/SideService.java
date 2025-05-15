@@ -28,7 +28,7 @@ public class SideService {
 
     private final SideRepository sideRepository;
     private final FileUploadService fileUploadService;
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
+
 
     // 사이드 목록 조회
     public List<SideResponseDTO> viewSideList() {
@@ -78,17 +78,9 @@ public class SideService {
                     .img(fileUrl)
                     .build();
 
-//           sideRepository.save(side);
+           sideRepository.save(side);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("side")
-                            .id(side.getUid())
-                            .name(side.getSideName())
-                            .status(side.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(side);
 
