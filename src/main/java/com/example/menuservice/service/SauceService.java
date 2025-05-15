@@ -28,7 +28,7 @@ public class SauceService {
 
     private final SauceRepository sauceRepository;
     private final FileUploadService fileUploadService;
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
+
 
     // 소스 목록 조회
     public List<SauceResponseDTO> viewSauceList() {
@@ -78,17 +78,9 @@ public class SauceService {
                     .img(fileUrl)
                     .build();
 
-//            sauceRepository.save(sauce);
+            sauceRepository.save(sauce);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("sauce")
-                            .id(sauce.getUid())
-                            .name(sauce.getSauceName())
-                            .status(sauce.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(sauce);
 
@@ -146,17 +138,8 @@ public class SauceService {
                     statusStr
             );
 
-//            sauceRepository.save(sauce);
+            sauceRepository.save(sauce);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("sauce")
-                            .id(sauce.getUid())
-                            .name(sauce.getSauceName())
-                            .status(sauce.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build());
 
             return toResponseDTO(sauce);
         } catch (Exception e) {

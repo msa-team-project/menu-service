@@ -28,7 +28,6 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final FileUploadService fileUploadService;
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 재료 목록 조회
     public List<MaterialResponseDTO> viewMaterialList() {
@@ -78,17 +77,9 @@ public class MaterialService {
                     .status(status.name())
                     .build();
 
-//            materialRepository.save(material);
+            materialRepository.save(material);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("material")
-                            .id(material.getUid())
-                            .name(material.getMaterialName())
-                            .status(material.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(material);
         } catch (Exception e) {
@@ -145,17 +136,8 @@ public class MaterialService {
             );
 
 
-//            materialRepository.save(material);
+            materialRepository.save(material);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("material")
-                            .id(material.getUid())
-                            .name(material.getMaterialName())
-                            .status(material.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build());
 
             return toResponseDTO(material);
         } catch (Exception e) {
