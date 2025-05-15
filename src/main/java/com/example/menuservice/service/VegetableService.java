@@ -28,7 +28,7 @@ public class VegetableService {
 
     private final VegetableRepository vegetableRepository;
     private final FileUploadService fileUploadService;
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
+
 
     // 채소 목록 조회
     public List<VegetableResponseDTO> viewVegetableList() {
@@ -78,17 +78,9 @@ public class VegetableService {
                     .img(fileUrl)
                     .build();
 
-//            vegetableRepository.save(vegetable);
+            vegetableRepository.save(vegetable);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("vegetable")
-                            .id(vegetable.getUid())
-                            .name(vegetable.getVegetableName())
-                            .status(vegetable.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(vegetable);
         } catch (Exception e) {
@@ -144,18 +136,9 @@ public class VegetableService {
                     statusStr
             );
 
-//            vegetableRepository.save(vegetable);
+            vegetableRepository.save(vegetable);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("vegetable")
-                            .id(vegetable.getUid())
-                            .name(vegetable.getVegetableName())
-                            .status(vegetable.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build());
-
+            
             return toResponseDTO(vegetable);
         } catch (Exception e) {
             if (fileUrl != null) {

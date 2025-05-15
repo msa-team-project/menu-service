@@ -28,7 +28,6 @@ public class CheeseService {
 
     private final CheeseRepository cheeseRepository;
     private final FileUploadService fileUploadService;
-    private final RabbitTemplate rabbitTemplate; // RabbitMQ 직접 접근용
 
     // 치즈 목록 조회
     public List<CheeseResponseDTO> viewCheeseList() {
@@ -78,17 +77,9 @@ public class CheeseService {
                     .img(fileUrl)
                     .build();
 
-//            cheeseRepository.save(cheese);
+            cheeseRepository.save(cheese);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-add.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("cheese")
-                            .id(cheese.getUid())
-                            .name(cheese.getCheeseName())
-                            .status(cheese.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(cheese);
 
@@ -146,17 +137,9 @@ public class CheeseService {
             );
 
 
-//           cheeseRepository.save(cheese);
+           cheeseRepository.save(cheese);
             // 메시지 전송
-            rabbitTemplate.convertAndSend("ingredient-update.menu-service",
-                    IngredientEventDTO.builder()
-                            .type("cheese")
-                            .id(cheese.getUid())
-                            .name(cheese.getCheeseName())
-                            .status(cheese.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build());
+
 
             return toResponseDTO(cheese);
         } catch (Exception e) {
