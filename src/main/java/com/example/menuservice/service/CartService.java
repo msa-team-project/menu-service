@@ -88,7 +88,7 @@ public class CartService {
                     .userUid(userUid)
                     .socialUid(socialUid)
                     .build();
-//            cartRepository.save(cart);
+            cartRepository.save(cart);
         }
     }
 
