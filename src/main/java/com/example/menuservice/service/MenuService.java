@@ -2,14 +2,12 @@ package com.example.menuservice.service;
 
 import com.example.menuservice.domain.*;
 import com.example.menuservice.dto.MenuResponseDTO;
-import com.example.menuservice.event.MenuEventDTO;
 import com.example.menuservice.exception.MenuAlreadyExistsException;
 import com.example.menuservice.exception.MenuNotFoundException;
 import com.example.menuservice.mapper.MenuMapper;
 import com.example.menuservice.repository.*;
 import com.example.menuservice.sqs.SqsConfig;
 import com.example.menuservice.status.MenuStatus;
-import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -21,7 +19,6 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,14 +38,12 @@ public class MenuService {
     private final SqsClient sqsClient;
     private final SqsConfig sqsConfig;
 
-    // 메뉴 목록 조회
     public List<MenuResponseDTO> viewMenuList() {
         return menuRepository.findAll().stream()
                 .map(MenuMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // 단일 메뉴 조회
     public MenuResponseDTO viewMenu(String menuName) {
         Menu menu = menuRepository.findByMenuName(menuName)
                 .orElseThrow(() -> new MenuNotFoundException(menuName));
@@ -71,8 +66,9 @@ public class MenuService {
             }
 
             Menu menu = buildMenuFromJson(menuJson, fileUrl);
+            menuRepository.save(menu);
 
-            sendMenuEvent(menu, EventType.CREATED);
+            sendMenuEvent(menu, sqsConfig.getAddQueueName());
 
             return MenuMapper.toResponseDTO(menu);
         } catch (Exception e) {
@@ -122,7 +118,7 @@ public class MenuService {
                     menuJson.get("status").asText()
             );
 
-            sendMenuEvent(menu, EventType.UPDATED);
+            sendMenuEvent(menu, sqsConfig.getUpdateQueueName());
 
             return MenuMapper.toResponseDTO(menu);
 
@@ -137,16 +133,14 @@ public class MenuService {
         Menu menu = menuRepository.findByMenuName(menuName)
                 .orElseThrow(() -> new MenuNotFoundException(menuName));
         menu.setStatus(MenuStatus.DELETED.name());
+
+        // 삭제 이벤트 큐로 메시지 전송
+        sendMenuEvent(menu, sqsConfig.getDeleteQueueName());
     }
 
-    @Transactional
-    public void updateMenuStatus(Long uid, String status) {
-        Menu menu = menuRepository.findById(uid)
-                .orElseThrow(() -> new MenuNotFoundException("ID: " + uid));
-        menu.setStatus(status);
-    }
+    
 
-    // === 내부 도우미 메서드 ===
+
     private Bread getBread(Long id) {
         return breadRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Bread not found: " + id));
     }
@@ -202,20 +196,13 @@ public class MenuService {
         return (id == 0L) ? null : fetcher.apply(id);
     }
 
-    private void sendMenuEvent(Menu menu, EventType type) {
+    private void sendMenuEvent(Menu menu, String queueName) {
         try {
-//            MenuEventDTO event = MenuEventDTO.builder()
-//                    .menuId(menu.getUid())
-//                    .menuName(menu.getMenuName())
-//                    .status(menu.getStatus())
-//                    .eventType(type)
-//                    .updatedAt(Instant.now())
-//                    .build();
-
             String messageBody = objectMapper.writeValueAsString(menu);
+            String queueUrl = sqsConfig.getQueueUrl(queueName);
 
             SendMessageRequest request = SendMessageRequest.builder()
-                    .queueUrl(sqsConfig.getQueueUrl())
+                    .queueUrl(queueUrl)
                     .messageBody(messageBody)
                     .build();
 

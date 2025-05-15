@@ -13,12 +13,22 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 @Getter
 @Setter
 public class SqsConfig {
-    private String queueName;
+
+    private String addQueueName;
+    private String updateQueueName;
+    private String deleteQueueName;
+
+    private String ingredientAddQueueName;
+    private String ingredientUpdateQueueName;
+    private String ingredientDeleteQueueName;
 
     @Autowired
     private SqsClient sqsClient;
 
-    public String getQueueUrl() {
-        return sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
+    public String getQueueUrl(String queueName) {
+        return sqsClient.getQueueUrl(GetQueueUrlRequest.builder()
+                        .queueName(queueName)
+                        .build())
+                .queueUrl();
     }
 }
