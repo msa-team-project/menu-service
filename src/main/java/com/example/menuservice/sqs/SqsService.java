@@ -1,30 +1,30 @@
 package com.example.menuservice.sqs;
 
-
-
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SqsService {
 
     private final SqsClient sqsClient;
+    private final SqsConfig sqsConfig;
 
-    @Value("${aws.sqs.queueName}")
-    private String queueName;
-
-    public SqsService(SqsClient sqsClient) {
+    public SqsService(SqsClient sqsClient, SqsConfig sqsConfig) {
         this.sqsClient = sqsClient;
+        this.sqsConfig = sqsConfig;
     }
 
+    // 기본 호출용: 기존처럼 addQueueName 으로 메시지 보냄
     public void sendMessageToSqs(String messageBody) {
-        // 큐 URL 가져오기
-        String queueUrl = sqsClient.getQueueUrl(builder -> builder.queueName(queueName)).queueUrl();
+        sendMessageToSqs(messageBody, sqsConfig.getAddQueueName());
+    }
 
-        // 메시지 보내기
+    // 큐 이름 직접 지정 가능
+    public void sendMessageToSqs(String messageBody, String queueName) {
+        String queueUrl = sqsConfig.getQueueUrl(queueName);
+
         SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(messageBody)
@@ -32,7 +32,6 @@ public class SqsService {
 
         SendMessageResponse sendMessageResponse = sqsClient.sendMessage(sendMessageRequest);
 
-        // 메시지 전송 결과 확인
-        System.out.println("Message Sent to SQS: " + sendMessageResponse.messageId());
+        System.out.println("Message Sent to SQS: " + sendMessageResponse.messageId() + " to queue: " + queueName);
     }
 }

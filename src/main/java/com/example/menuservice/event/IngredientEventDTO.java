@@ -14,8 +14,7 @@ import java.time.Instant;
 public class IngredientEventDTO implements Serializable {
     private String type;            // "bread" / "cheeze"
     private Long id;        // 식별자
-    private String name;    // 사용자 친화적 정보
+    private String name;
+    private String img;// 사용자 친화적 정보
     private String status;      // ACTIVE, INACTIVE 등
-    private EventType eventType;   // created, updated, deleted 등
-    private Instant updatedAt;  // 언제 이벤트가 발생했는지
 }

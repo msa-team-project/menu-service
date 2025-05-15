@@ -1,17 +1,18 @@
 package com.example.menuservice.service;
 
-import com.example.menuservice.event.IngredientEventDTO;
-import com.example.menuservice.status.BreadStatus;
 import com.example.menuservice.domain.Bread;
 import com.example.menuservice.dto.BreadResponseDTO;
+import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.exception.BreadAlreadyExistsException;
 import com.example.menuservice.exception.BreadNotFoundException;
 import com.example.menuservice.repository.BreadRepository;
+import com.example.menuservice.sqs.SqsService;
+import com.example.menuservice.status.BreadStatus;
 import com.example.menuservice.type.EventType;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,34 +25,31 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BreadService {
+
     private final BreadRepository breadRepository;
     private final FileUploadService fileUploadService;
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
-    // 빵 목록 조회
     public List<BreadResponseDTO> viewBreadList() {
         return breadRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // 빵 이름으로 빵 조회
     public BreadResponseDTO viewBread(String breadName) {
         Bread bread = breadRepository.findByBreadName(breadName)
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
         return toResponseDTO(bread);
     }
 
-    // 빵 추가
     @Transactional
     public BreadResponseDTO addBread(String breadRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(breadRequestJson);
 
-            // JsonNode에서 필요한 값 꺼내기
             String breadName = jsonNode.get("breadName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -75,17 +73,17 @@ public class BreadService {
                     .img(fileUrl)
                     .build();
 
-            breadRepository.save(bread);
-            // 메시지 전송
+//            breadRepository.save(bread);
 
-                    IngredientEventDTO.builder()
-                            .type("bread")
-                            .id(bread.getUid())
-                            .name(bread.getBreadName())
-                            .status(bread.getStatus())
-                            .eventType(EventType.CREATED)
-                            .updatedAt(Instant.now())
-                            .build();
+            // SQS 메시지 전송
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("bread")
+                    .name(bread.getBreadName())
+                    .status(bread.getStatus())
+                    .img(bread.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(bread);
         } catch (Exception e) {
@@ -96,17 +94,13 @@ public class BreadService {
         }
     }
 
-    // 빵 수정
     @Transactional
     public BreadResponseDTO editBreadDetails(String breadName, String breadRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(breadRequestJson);
 
-            // JSON에서 필요한 값 추출
             String breadNameFromJson = jsonNode.get("breadName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -132,18 +126,18 @@ public class BreadService {
                     statusStr
             );
 
+            Bread saved = breadRepository.save(bread);
 
-            breadRepository.save(bread);
-            // 메시지 전송
+            // SQS 메시지 전송
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("bread")
+                    .id(saved.getUid())
+                    .name(bread.getBreadName())
+                    .status(bread.getStatus())
+                    .img(bread.getImg())
+                    .build();
 
-                    IngredientEventDTO.builder()
-                            .type("bread")
-                            .id(bread.getUid())
-                            .name(bread.getBreadName())
-                            .status(bread.getStatus())
-                            .eventType(EventType.UPDATED)
-                            .updatedAt(Instant.now())
-                            .build();
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
 
             return toResponseDTO(bread);
         } catch (Exception e) {
@@ -152,25 +146,32 @@ public class BreadService {
             }
             throw e;
         }
-
     }
 
-
-    // 빵 삭제
     @Transactional
     public void removeBread(String breadName) {
         Bread bread = breadRepository.findByBreadName(breadName)
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
+
         bread.setStatus(BreadStatus.DELETED.name());
         breadRepository.save(bread);
+
+        // SQS 메시지 전송
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("bread")
+                    .id(bread.getUid())
+                    .name(bread.getBreadName())
+                    .status(bread.getStatus())
+                    .img(bread.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
+        }
     }
 
-
-
-
-
-
-    // Bread -> BreadResponseDTO 변환 메서드
     private BreadResponseDTO toResponseDTO(Bread bread) {
         return new BreadResponseDTO(
                 bread.getUid(),
