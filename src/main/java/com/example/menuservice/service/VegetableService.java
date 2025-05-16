@@ -3,22 +3,20 @@ package com.example.menuservice.service;
 import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.VegetableStatus;
 import com.example.menuservice.domain.Vegetable;
-import com.example.menuservice.dto.VegetableRequestDTO;
 import com.example.menuservice.dto.VegetableResponseDTO;
 import com.example.menuservice.exception.VegetableAlreadyExistsException;
 import com.example.menuservice.exception.VegetableNotFoundException;
 import com.example.menuservice.repository.VegetableRepository;
-import com.example.menuservice.type.EventType;
+import com.example.menuservice.sqs.SqsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +26,8 @@ public class VegetableService {
 
     private final VegetableRepository vegetableRepository;
     private final FileUploadService fileUploadService;
-
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
     // 채소 목록 조회
     public List<VegetableResponseDTO> viewVegetableList() {
@@ -48,13 +47,9 @@ public class VegetableService {
     @Transactional
     public VegetableResponseDTO addVegetable(String vegetableRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
-
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(vegetableRequestJson);
 
-            // JSON에서 필요한 값 추출
             String vegetableName = jsonNode.get("vegetableName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -78,14 +73,27 @@ public class VegetableService {
                     .img(fileUrl)
                     .build();
 
-            vegetableRepository.save(vegetable);
-            // 메시지 전송
 
+
+            // SQS 메시지 전송 (추가 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("vegetable")
+                    .name(vegetable.getVegetableName())
+                    .calorie(vegetable.getCalorie())
+                    .price(vegetable.getPrice())
+                    .status(vegetable.getStatus())
+                    .img(vegetable.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(vegetable);
+
         } catch (Exception e) {
             if (fileUrl != null) {
-                fileUploadService.deleteFile(fileUrl);
+                try {
+                    fileUploadService.deleteFile(fileUrl);
+                } catch (Exception ignored) {}
             }
             throw e;
         }
@@ -97,7 +105,22 @@ public class VegetableService {
         Vegetable vegetable = vegetableRepository.findByVegetableName(vegetableName)
                 .orElseThrow(() -> new VegetableNotFoundException(vegetableName));
         vegetable.setStatus(VegetableStatus.DELETED.name());
-        vegetableRepository.save(vegetable);
+
+        // SQS 메시지 전송 (삭제 이벤트)
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("vegetable")
+                    .id(vegetable.getUid())
+                    .name(vegetable.getVegetableName())
+                    .status(vegetable.getStatus())
+                    .img(vegetable.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
+        }
     }
 
     // 채소 수정
@@ -106,11 +129,8 @@ public class VegetableService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(vegetableRequestJson);
 
-            // JSON에서 필요한 값 추출
             String vegetableNameFromJson = jsonNode.get("vegetableName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -133,16 +153,29 @@ public class VegetableService {
                     calorie,
                     price,
                     fileUrl,
-                    statusStr
+                    VegetableStatus.valueOf(statusStr.toUpperCase()).name()
             );
 
-            vegetableRepository.save(vegetable);
-            // 메시지 전송
-            
+
+
+            // SQS 메시지 전송 (수정 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("vegetable")
+                    .id(vegetable.getUid())
+                    .name(vegetable.getVegetableName())
+                    .status(vegetable.getStatus())
+                    .img(vegetable.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
+
             return toResponseDTO(vegetable);
+
         } catch (Exception e) {
             if (fileUrl != null) {
-                fileUploadService.deleteFile(fileUrl);
+                try {
+                    fileUploadService.deleteFile(fileUrl);
+                } catch (Exception ignored) {}
             }
             throw e;
         }

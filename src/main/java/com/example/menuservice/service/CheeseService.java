@@ -3,22 +3,20 @@ package com.example.menuservice.service;
 import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.CheeseStatus;
 import com.example.menuservice.domain.Cheese;
-import com.example.menuservice.dto.CheeseRequestDTO;
 import com.example.menuservice.dto.CheeseResponseDTO;
 import com.example.menuservice.exception.CheeseAlreadyExistsException;
 import com.example.menuservice.exception.CheeseNotFoundException;
 import com.example.menuservice.repository.CheeseRepository;
-import com.example.menuservice.type.EventType;
+import com.example.menuservice.sqs.SqsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +26,8 @@ public class CheeseService {
 
     private final CheeseRepository cheeseRepository;
     private final FileUploadService fileUploadService;
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
     // 치즈 목록 조회
     public List<CheeseResponseDTO> viewCheeseList() {
@@ -49,11 +49,8 @@ public class CheeseService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(cheeseRequestJson);
 
-            // JsonNode에서 필요한 값 꺼내기
             String cheeseName = jsonNode.get("cheeseName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -77,9 +74,19 @@ public class CheeseService {
                     .img(fileUrl)
                     .build();
 
-            cheeseRepository.save(cheese);
-            // 메시지 전송
 
+
+            // SQS 메시지 전송 (추가 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("cheese")
+                    .name(cheese.getCheeseName())
+                    .calorie(cheese.getCalorie())
+                    .price(cheese.getPrice())
+                    .status(cheese.getStatus())
+                    .img(cheese.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(cheese);
 
@@ -91,26 +98,14 @@ public class CheeseService {
         }
     }
 
-    // 치즈 삭제 (상태만 DELETED로 변경)
-    @Transactional
-    public void removeCheese(String cheeseName) {
-        Cheese cheese = cheeseRepository.findByCheeseName(cheeseName)
-                .orElseThrow(() -> new CheeseNotFoundException(cheeseName));
-        cheese.setStatus(CheeseStatus.DELETED.name());
-        cheeseRepository.save(cheese);
-    }
-
     // 치즈 수정
     @Transactional
     public CheeseResponseDTO editCheeseDetails(String cheeseName, String cheeseRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(cheeseRequestJson);
 
-            // JSON에서 필요한 값 추출
             String cheeseNameFromJson = jsonNode.get("cheeseName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -137,16 +132,49 @@ public class CheeseService {
             );
 
 
-           cheeseRepository.save(cheese);
-            // 메시지 전송
 
+            // SQS 메시지 전송 (수정 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("cheese")
+                    .id(cheese.getUid())
+                    .name(cheese.getCheeseName())
+                    .status(cheese.getStatus())
+                    .img(cheese.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
 
             return toResponseDTO(cheese);
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
+        }
+    }
+
+    // 치즈 삭제 (상태만 DELETED로 변경)
+    @Transactional
+    public void removeCheese(String cheeseName) {
+        Cheese cheese = cheeseRepository.findByCheeseName(cheeseName)
+                .orElseThrow(() -> new CheeseNotFoundException(cheeseName));
+        cheese.setStatus(CheeseStatus.DELETED.name());
+
+
+        // SQS 메시지 전송 (삭제 이벤트)
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("cheese")
+                    .id(cheese.getUid())
+                    .name(cheese.getCheeseName())
+                    .status(cheese.getStatus())
+                    .img(cheese.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
         }
     }
 

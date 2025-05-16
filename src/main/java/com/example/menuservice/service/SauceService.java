@@ -3,22 +3,20 @@ package com.example.menuservice.service;
 import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.SauceStatus;
 import com.example.menuservice.domain.Sauce;
-import com.example.menuservice.dto.SauceRequestDTO;
 import com.example.menuservice.dto.SauceResponseDTO;
 import com.example.menuservice.exception.SauceAlreadyExistsException;
 import com.example.menuservice.exception.SauceNotFoundException;
 import com.example.menuservice.repository.SauceRepository;
-import com.example.menuservice.type.EventType;
+import com.example.menuservice.sqs.SqsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +26,8 @@ public class SauceService {
 
     private final SauceRepository sauceRepository;
     private final FileUploadService fileUploadService;
-
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
     // 소스 목록 조회
     public List<SauceResponseDTO> viewSauceList() {
@@ -50,11 +49,8 @@ public class SauceService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(sauceRequestJson);
 
-            // JSON에서 필요한 값 추출
             String sauceName = jsonNode.get("sauceName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -64,8 +60,6 @@ public class SauceService {
                 throw new SauceAlreadyExistsException(sauceName);
             }
 
-            SauceStatus status = SauceStatus.valueOf(statusStr.toUpperCase());
-
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
             }
@@ -74,16 +68,25 @@ public class SauceService {
                     .sauceName(sauceName)
                     .calorie(calorie)
                     .price(price)
-                    .status(status.name())
+                    .status(statusStr.toUpperCase())
                     .img(fileUrl)
                     .build();
 
-            sauceRepository.save(sauce);
-            // 메시지 전송
 
+
+            // SQS 메시지 전송 (추가 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("sauce")
+                    .name(sauce.getSauceName())
+                    .calorie(sauce.getCalorie())
+                    .price(sauce.getPrice())
+                    .status(sauce.getStatus())
+                    .img(sauce.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(sauce);
-
 
         } catch (Exception e) {
             if (fileUrl != null) {
@@ -99,7 +102,22 @@ public class SauceService {
         Sauce sauce = sauceRepository.findBySauceName(sauceName)
                 .orElseThrow(() -> new SauceNotFoundException(sauceName));
         sauce.setStatus(SauceStatus.DELETED.name());
-        sauceRepository.save(sauce);
+
+
+        // SQS 메시지 전송 (삭제 이벤트)
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("sauce")
+                    .id(sauce.getUid())
+                    .name(sauce.getSauceName())
+                    .status(sauce.getStatus())
+                    .img(sauce.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
+        }
     }
 
     // 소스 수정
@@ -108,11 +126,8 @@ public class SauceService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(sauceRequestJson);
 
-            // JSON에서 필요한 값 추출
             String sauceNameFromJson = jsonNode.get("sauceName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -135,13 +150,24 @@ public class SauceService {
                     calorie,
                     price,
                     fileUrl,
-                    statusStr
+                    statusStr.toUpperCase()
             );
 
-            sauceRepository.save(sauce);
-            // 메시지 전송
+
+
+            // SQS 메시지 전송 (수정 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("sauce")
+                    .id(sauce.getUid())
+                    .name(sauce.getSauceName())
+                    .status(sauce.getStatus())
+                    .img(sauce.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
 
             return toResponseDTO(sauce);
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);

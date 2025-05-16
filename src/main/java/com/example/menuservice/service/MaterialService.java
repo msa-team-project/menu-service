@@ -1,24 +1,22 @@
 package com.example.menuservice.service;
 
 import com.example.menuservice.domain.Material;
-import com.example.menuservice.dto.MaterialRequestDTO;
 import com.example.menuservice.dto.MaterialResponseDTO;
 import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.exception.MaterialAlreadyExistsException;
 import com.example.menuservice.exception.MaterialNotFoundException;
 import com.example.menuservice.repository.MaterialRepository;
+import com.example.menuservice.sqs.SqsService;
 import com.example.menuservice.status.MaterialStatus;
-import com.example.menuservice.type.EventType;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +26,8 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final FileUploadService fileUploadService;
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
     // 재료 목록 조회
     public List<MaterialResponseDTO> viewMaterialList() {
@@ -49,11 +49,8 @@ public class MaterialService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(materialRequestJson);
 
-            // JsonNode에서 필요한 값 꺼내기
             String materialName = jsonNode.get("materialName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -62,8 +59,6 @@ public class MaterialService {
             if (materialRepository.existsByMaterialName(materialName)) {
                 throw new MaterialAlreadyExistsException(materialName);
             }
-
-            MaterialStatus status = MaterialStatus.valueOf(statusStr.toUpperCase());
 
             if (file != null && !file.isEmpty()) {
                 fileUrl = fileUploadService.uploadFile(file);
@@ -74,14 +69,24 @@ public class MaterialService {
                     .calorie(calorie)
                     .price(price)
                     .img(fileUrl)
-                    .status(status.name())
+                    .status(statusStr.toUpperCase())
                     .build();
 
-            materialRepository.save(material);
-            // 메시지 전송
 
+            // SQS 메시지 전송 (추가 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("material")
+                    .name(material.getMaterialName())
+                    .calorie(material.getCalorie())
+                    .price(material.getPrice())
+                    .status(material.getStatus())
+                    .img(material.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(material);
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
@@ -90,26 +95,14 @@ public class MaterialService {
         }
     }
 
-    // 재료 삭제 (상태만 DELETED로 변경)
-    @Transactional
-    public void removeMaterial(String materialName) {
-        Material material = materialRepository.findByMaterialName(materialName)
-                .orElseThrow(() -> new MaterialNotFoundException(materialName));
-        material.setStatus(MaterialStatus.DELETED.name());
-        materialRepository.save(material);
-    }
-
     // 재료 수정
     @Transactional
     public MaterialResponseDTO editMaterialDetails(String materialName, String materialRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(materialRequestJson);
 
-            // JSON에서 필요한 값 추출
             String materialNameFromJson = jsonNode.get("materialName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -132,19 +125,53 @@ public class MaterialService {
                     calorie,
                     price,
                     fileUrl,
-                    statusStr
+                    statusStr.toUpperCase()
             );
 
 
-            materialRepository.save(material);
-            // 메시지 전송
+
+            // SQS 메시지 전송 (수정 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("material")
+                    .id(material.getUid())
+                    .name(material.getMaterialName())
+                    .status(material.getStatus())
+                    .img(material.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
 
             return toResponseDTO(material);
+
         } catch (Exception e) {
             if (fileUrl != null) {
                 fileUploadService.deleteFile(fileUrl);
             }
             throw e;
+        }
+    }
+
+    // 재료 삭제 (상태만 DELETED로 변경)
+    @Transactional
+    public void removeMaterial(String materialName) {
+        Material material = materialRepository.findByMaterialName(materialName)
+                .orElseThrow(() -> new MaterialNotFoundException(materialName));
+        material.setStatus(MaterialStatus.DELETED.name());
+
+
+        // SQS 메시지 전송 (삭제 이벤트)
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("material")
+                    .id(material.getUid())
+                    .name(material.getMaterialName())
+                    .status(material.getStatus())
+                    .img(material.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
         }
     }
 

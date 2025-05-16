@@ -8,7 +8,6 @@ import com.example.menuservice.exception.BreadNotFoundException;
 import com.example.menuservice.repository.BreadRepository;
 import com.example.menuservice.sqs.SqsService;
 import com.example.menuservice.status.BreadStatus;
-import com.example.menuservice.type.EventType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,12 +71,14 @@ public class BreadService {
                     .img(fileUrl)
                     .build();
 
-//            breadRepository.save(bread);
+
 
             // SQS 메시지 전송
             IngredientEventDTO event = IngredientEventDTO.builder()
                     .type("bread")
                     .name(bread.getBreadName())
+                    .calorie(bread.getCalorie())
+                    .price(bread.getPrice())
                     .status(bread.getStatus())
                     .img(bread.getImg())
                     .build();
@@ -126,12 +126,12 @@ public class BreadService {
                     statusStr
             );
 
-            Bread saved = breadRepository.save(bread);
+
 
             // SQS 메시지 전송
             IngredientEventDTO event = IngredientEventDTO.builder()
                     .type("bread")
-                    .id(saved.getUid())
+                    .id(bread.getUid())
                     .name(bread.getBreadName())
                     .status(bread.getStatus())
                     .img(bread.getImg())
@@ -154,7 +154,7 @@ public class BreadService {
                 .orElseThrow(() -> new BreadNotFoundException(breadName));
 
         bread.setStatus(BreadStatus.DELETED.name());
-        breadRepository.save(bread);
+
 
         // SQS 메시지 전송
         try {
@@ -162,6 +162,7 @@ public class BreadService {
                     .type("bread")
                     .id(bread.getUid())
                     .name(bread.getBreadName())
+
                     .status(bread.getStatus())
                     .img(bread.getImg())
                     .build();
@@ -185,3 +186,9 @@ public class BreadService {
         );
     }
 }
+
+
+
+
+
+
