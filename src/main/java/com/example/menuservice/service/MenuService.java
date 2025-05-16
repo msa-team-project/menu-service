@@ -66,7 +66,7 @@ public class MenuService {
             }
 
             Menu menu = buildMenuFromJson(menuJson, fileUrl);
-            menuRepository.save(menu);
+//            menuRepository.save(menu);
 
             sendMenuEvent(menu, sqsConfig.getAddQueueName());
 

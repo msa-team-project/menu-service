@@ -3,22 +3,20 @@ package com.example.menuservice.service;
 import com.example.menuservice.event.IngredientEventDTO;
 import com.example.menuservice.status.SideStatus;
 import com.example.menuservice.domain.Side;
-import com.example.menuservice.dto.SideRequestDTO;
 import com.example.menuservice.dto.SideResponseDTO;
 import com.example.menuservice.exception.SideAlreadyExistsException;
 import com.example.menuservice.exception.SideNotFoundException;
 import com.example.menuservice.repository.SideRepository;
-import com.example.menuservice.type.EventType;
+import com.example.menuservice.sqs.SqsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +26,8 @@ public class SideService {
 
     private final SideRepository sideRepository;
     private final FileUploadService fileUploadService;
-
+    private final SqsService sqsService;
+    private final ObjectMapper objectMapper;
 
     // 사이드 목록 조회
     public List<SideResponseDTO> viewSideList() {
@@ -48,13 +47,9 @@ public class SideService {
     @Transactional
     public SideResponseDTO addSide(String sideRequestJson, MultipartFile file) throws IOException {
         String fileUrl = null;
-
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(sideRequestJson);
 
-            // JSON에서 필요한 값 추출
             String sideName = jsonNode.get("sideName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -78,16 +73,27 @@ public class SideService {
                     .img(fileUrl)
                     .build();
 
-           sideRepository.save(side);
-            // 메시지 전송
 
+
+            // SQS 메시지 전송 (추가 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("side")
+                    .name(side.getSideName())
+                    .calorie(side.getCalorie())
+                    .price(side.getPrice())
+                    .status(side.getStatus())
+                    .img(side.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-add-menu-service");
 
             return toResponseDTO(side);
 
-
         } catch (Exception e) {
             if (fileUrl != null) {
-                fileUploadService.deleteFile(fileUrl);
+                try {
+                    fileUploadService.deleteFile(fileUrl);
+                } catch (Exception ignored) {}
             }
             throw e;
         }
@@ -99,7 +105,23 @@ public class SideService {
         Side side = sideRepository.findBySideName(sideName)
                 .orElseThrow(() -> new SideNotFoundException(sideName));
         side.setStatus(SideStatus.DELETED.name());
-        sideRepository.save(side);
+
+
+        // SQS 메시지 전송 (삭제 이벤트)
+        try {
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("side")
+                    .id(side.getUid())
+                    .name(side.getSideName())
+                    .status(side.getStatus())
+                    .img(side.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-delete-menu-service");
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send delete message to SQS", e);
+        }
     }
 
     // 사이드 수정
@@ -108,11 +130,8 @@ public class SideService {
         String fileUrl = null;
 
         try {
-            // ObjectMapper로 JSON 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(sideRequestJson);
 
-            // JSON에서 필요한 값 추출
             String sideNameFromJson = jsonNode.get("sideName").asText();
             Double calorie = jsonNode.get("calorie").asDouble();
             int price = jsonNode.get("price").asInt();
@@ -135,13 +154,29 @@ public class SideService {
                     calorie,
                     price,
                     fileUrl,
-                    statusStr
+                    SideStatus.valueOf(statusStr.toUpperCase()).name()
             );
 
-            return toResponseDTO(sideRepository.save(side));
+
+
+            // SQS 메시지 전송 (수정 이벤트)
+            IngredientEventDTO event = IngredientEventDTO.builder()
+                    .type("side")
+                    .id(side.getUid())
+                    .name(side.getSideName())
+                    .status(side.getStatus())
+                    .img(side.getImg())
+                    .build();
+
+            sqsService.sendMessageToSqs(objectMapper.writeValueAsString(event), "ingredient-update-menu-service");
+
+            return toResponseDTO(side);
+
         } catch (Exception e) {
             if (fileUrl != null) {
-                fileUploadService.deleteFile(fileUrl);
+                try {
+                    fileUploadService.deleteFile(fileUrl);
+                } catch (Exception ignored) {}
             }
             throw e;
         }
