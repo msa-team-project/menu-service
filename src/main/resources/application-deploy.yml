@@ -1,0 +1,45 @@
+server:
+  port: 9003
+
+spring:
+  application:
+    name: menu-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/menu
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+aws:
+  region: ap-northeast-2
+
+  s3:
+    accessKeyId: ${S3_API_KEY}
+    secretAccessKey: ${S3_API_SECRET}
+    bucket:
+      name: himedia-sandis-20205
+
+  sqs:
+    accessKeyId: ${SQS_ACCESS_KEY_ID}
+    secretAccessKey: ${SQS_SECRET_ACCESS_KEY}
+    addQueueName: menu-add-menu-service
+    updateQueueName: menu-update-menu-service
+    deleteQueueName: menu-delete-menu-service
+    ingredientAddQueueName: ingredient-add-menu-service
+    ingredientUpdateQueueName: ingredient-update-menu-service
+    ingredientDeleteQueueName: ingredient-delete-menu-service
