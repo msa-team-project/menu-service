@@ -29,10 +29,6 @@ jobs:
         run: |
           aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name sandit-cluster
 
-      - name: Authenticate to EKS (generate token)
-        run: |
-          aws eks get-token --region ${{ secrets.AWS_REGION }} --cluster-name sandit-cluster > /dev/null
-
       - name: Create Kubernetes Secrets from GitHub Secrets
         run: |
           kubectl create secret generic menu-service-secrets \
