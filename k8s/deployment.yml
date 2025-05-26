@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: menu-service
+spec:
+  selector:
+    matchLabels:
+      app: menu-service
+  template:
+    metadata:
+      labels:
+        app: menu-service
+    spec:
+      nodeSelector:
+        role: main
+      containers:
+        - name: menu-service
+          image: 448049828702.dkr.ecr.ap-northeast-2.amazonaws.com/menu-service:latest
+          imagePullPolicy: Always
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          resources:
+            requests:
+              cpu: "350m"
+              memory: "500Mi"
+            limits:
+              cpu: "500m"
+              memory: "1024Mi"
+          ports:
+            - containerPort: 9003
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://10.0.1.52:3306/menu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+            - name: SQS_URL_MENU_ADD
+              value: menu-add-menu-service
+            - name: SQS_URL_MENU_UPDATE
+              value: menu-update-menu-service
+            - name: SQS_URL_MENU_DELETE
+              value: menu-delete-menu-service
+            - name: SQS_URL_INGREDIENT_ADD
+              value: ingredient-add-menu-service
+            - name: SQS_URL_INGREDIENT_UPDATE
+              value: ingredient-update-menu-service
+            - name: SQS_URL_INGREDIENT_DELETE
+              value: ingredient-delete-menu-service
+            - name: SPRING_PROFILES_ACTIVE
+              value: deploy
+            - name: SPRING_DATASOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: SPRING_DATASOURCE_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: MENU_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: MENU_S3_ACCESS_KEY_ID
+            - name: MENU_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: MENU_S3_SECRET_ACCESS_KEY
+            - name: MENU_S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: MENU_S3_BUCKET_NAME
+            - name: MENU_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: MENU_AWS_ACCESS_KEY_ID
+            - name: MENU_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: menu-service-secrets
+                  key: MENU_AWS_SECRET_ACCESS_KEY
