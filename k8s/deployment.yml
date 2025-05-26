@@ -32,7 +32,7 @@ spec:
             - containerPort: 9003
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://10.0.1.52:3306/menu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+              value: jdbc:mysql://sandit-mysql:3306/menu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
             - name: SQS_URL_MENU_ADD
               value: menu-add-menu-service
             - name: SQS_URL_MENU_UPDATE
