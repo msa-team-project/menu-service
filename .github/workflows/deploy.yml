@@ -43,7 +43,7 @@ jobs:
             --from-literal=MENU_S3_BUCKET_NAME=${{ secrets.MENU_S3_BUCKET_NAME }} \
             --from-literal=MENU_AWS_ACCESS_KEY_ID=${{ secrets.MENU_AWS_ACCESS_KEY_ID }} \
             --from-literal=MENU_AWS_SECRET_ACCESS_KEY=${{ secrets.MENU_AWS_SECRET_ACCESS_KEY }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
