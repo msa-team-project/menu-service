@@ -43,11 +43,3 @@ aws:
     ingredientAddQueueName: ${SQS_URL_INGREDIENT_ADD}
     ingredientUpdateQueueName: ${SQS_URL_INGREDIENT_UPDATE}
     ingredientDeleteQueueName: ${SQS_URL_INGREDIENT_DELETE}
-
-
-
-
-
-
-
-
