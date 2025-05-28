@@ -15,7 +15,7 @@ spec:
         role: main
       containers:
         - name: menu-service
-          image: 448049828702.dkr.ecr.ap-northeast-2.amazonaws.com/menu-service:latest
+          image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/menu-service:latest
           imagePullPolicy: Always
           lifecycle:
             preStop:
@@ -32,7 +32,7 @@ spec:
             - containerPort: 9003
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://${MYSQL_IP}:3306/menu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+              value: jdbc:mysql://$MYSQL_IP:3306/menu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
             - name: SQS_URL_MENU_ADD
               value: menu-add-menu-service
             - name: SQS_URL_MENU_UPDATE
