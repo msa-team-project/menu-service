@@ -119,7 +119,7 @@ public class CartService {
                     .userUid(userUid)
                     .socialUid(socialUid)
                     .build();
-//            cartRepository.save(cart);
+            cartRepository.save(cart);
         }
     }
 
@@ -145,7 +145,7 @@ public class CartService {
             cart.setCalorie(cart.getSide().getCalorie() * newAmount);
         }
 
-//        cartRepository.save(cart);
+        cartRepository.save(cart);
     }
 
     @Transactional
