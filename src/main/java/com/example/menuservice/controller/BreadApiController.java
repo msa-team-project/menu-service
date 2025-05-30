@@ -1,19 +1,21 @@
 package com.example.menuservice.controller;
 
-import com.example.menuservice.dto.BreadRequestDTO;
 import com.example.menuservice.dto.BreadResponseDTO;
+import com.example.menuservice.exception.BreadAlreadyExistsException;
+import com.example.menuservice.exception.BreadNotFoundException;
 import com.example.menuservice.service.BreadService;
 import com.example.menuservice.service.FileUploadService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/menus/breads")
@@ -22,58 +24,68 @@ public class BreadApiController {
     private final BreadService breadService;
     private final FileUploadService fileUploadService;
 
-    // 빵 목록 조회
     @GetMapping
-    public Iterable<BreadResponseDTO> getBreads() {
-        return breadService.viewBreadList();
+    public ResponseEntity<List<BreadResponseDTO>> getBreads() {
+        return ResponseEntity.ok(breadService.viewBreadList());
     }
 
-    // 빵 조회
     @GetMapping("/{breadName}")
-    public BreadResponseDTO getBread(@PathVariable String breadName) {
-        return breadService.viewBread(breadName);
+    public ResponseEntity<?> getBread(@PathVariable String breadName) {
+        try {
+            return ResponseEntity.ok(breadService.viewBread(breadName));
+        } catch (BreadNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // 빵 추가
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BreadResponseDTO> addBread(
-            @RequestPart(value = "bread") String breadRequestDTO,
+    public ResponseEntity<?> addBread(
+            @RequestPart("bread") String breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
-        System.out.println("Received bread data: " + breadRequestDTO);
-        System.out.println("Received file name: " + file.getOriginalFilename());
         try {
-            // ✅ 파일은 업로드하지 않고, Service에 그대로 넘긴다
             BreadResponseDTO response = breadService.addBread(breadRequestDTO, file);
             return ResponseEntity.ok(response);
+        } catch (BreadAlreadyExistsException e) {
+            log.warn("중복된 빵 이름: {}", e.getMessage());
+            return ResponseEntity.status(409).body("이미 존재하는 빵입니다.");
         } catch (IOException e) {
-            return ResponseEntity.badRequest().build();
+            log.error("파일 업로드 중 오류", e);
+            return ResponseEntity.badRequest().body("파일 업로드 실패");
+        } catch (Exception e) {
+            log.error("빵 추가 중 알 수 없는 오류", e);
+            return ResponseEntity.internalServerError().body("서버 오류");
         }
-
     }
-
 
     @PutMapping(value = "/{breadName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BreadResponseDTO> updateBread(
+    public ResponseEntity<?> updateBread(
             @PathVariable String breadName,
-            @Valid @RequestPart("bread") String breadRequestDTO,
+            @RequestPart("bread") String breadRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
-
         try {
-            // ❌ Controller에서는 업로드 X
-            // ✅ 파일만 그대로 전달
             BreadResponseDTO response = breadService.editBreadDetails(breadName, breadRequestDTO, file);
             return ResponseEntity.ok(response);
+        } catch (BreadNotFoundException e) {
+            return ResponseEntity.notFound().build();
         } catch (IOException e) {
-            return ResponseEntity.badRequest().build();
+            log.error("파일 업로드 중 오류", e);
+            return ResponseEntity.badRequest().body("파일 업로드 실패");
+        } catch (Exception e) {
+            log.error("빵 수정 중 알 수 없는 오류", e);
+            return ResponseEntity.internalServerError().body("서버 오류");
         }
     }
 
-
-
-    // 빵 삭제
     @DeleteMapping("/{breadName}")
-    public void deleteBread(@PathVariable String breadName) {
-        breadService.removeBread(breadName);
+    public ResponseEntity<?> deleteBread(@PathVariable String breadName) {
+        try {
+            breadService.removeBread(breadName);
+            return ResponseEntity.noContent().build();
+        } catch (BreadNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("빵 삭제 중 오류", e);
+            return ResponseEntity.internalServerError().body("서버 오류");
+        }
     }
-
 }
