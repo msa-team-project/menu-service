@@ -113,6 +113,8 @@ public class SideService {
                     .type("side")
                     .id(side.getUid())
                     .name(side.getSideName())
+                    .price(side.getPrice())
+                    .calorie(side.getCalorie())
                     .status(side.getStatus())
                     .img(side.getImg())
                     .build();
@@ -164,6 +166,8 @@ public class SideService {
                     .type("side")
                     .id(side.getUid())
                     .name(side.getSideName())
+                    .price(side.getPrice())
+                    .calorie(side.getCalorie())
                     .status(side.getStatus())
                     .img(side.getImg())
                     .build();

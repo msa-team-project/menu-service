@@ -138,6 +138,8 @@ public class CheeseService {
                     .type("cheese")
                     .id(cheese.getUid())
                     .name(cheese.getCheeseName())
+                    .price(cheese.getPrice())
+                    .calorie(cheese.getCalorie())
                     .status(cheese.getStatus())
                     .img(cheese.getImg())
                     .build();
@@ -168,6 +170,8 @@ public class CheeseService {
                     .type("cheese")
                     .id(cheese.getUid())
                     .name(cheese.getCheeseName())
+                    .price(cheese.getPrice())
+                    .calorie(cheese.getCalorie())
                     .status(cheese.getStatus())
                     .img(cheese.getImg())
                     .build();

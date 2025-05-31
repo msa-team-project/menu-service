@@ -133,6 +133,8 @@ public class BreadService {
                     .type("bread")
                     .id(bread.getUid())
                     .name(bread.getBreadName())
+                    .price(bread.getPrice())
+                    .calorie(bread.getCalorie())
                     .status(bread.getStatus())
                     .img(bread.getImg())
                     .build();
@@ -162,7 +164,8 @@ public class BreadService {
                     .type("bread")
                     .id(bread.getUid())
                     .name(bread.getBreadName())
-
+                    .price(bread.getPrice())
+                    .calorie(bread.getCalorie())
                     .status(bread.getStatus())
                     .img(bread.getImg())
                     .build();
