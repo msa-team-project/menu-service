@@ -110,6 +110,8 @@ public class SauceService {
                     .type("sauce")
                     .id(sauce.getUid())
                     .name(sauce.getSauceName())
+                    .price(sauce.getPrice())
+                    .calorie(sauce.getCalorie())
                     .status(sauce.getStatus())
                     .img(sauce.getImg())
                     .build();
@@ -160,6 +162,8 @@ public class SauceService {
                     .type("sauce")
                     .id(sauce.getUid())
                     .name(sauce.getSauceName())
+                    .price(sauce.getPrice())
+                    .calorie(sauce.getCalorie())
                     .status(sauce.getStatus())
                     .img(sauce.getImg())
                     .build();
