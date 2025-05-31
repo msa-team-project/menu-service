@@ -135,6 +135,8 @@ public class MaterialService {
                     .type("material")
                     .id(material.getUid())
                     .name(material.getMaterialName())
+                    .price(material.getPrice())
+                    .calorie(material.getCalorie())
                     .status(material.getStatus())
                     .img(material.getImg())
                     .build();
@@ -165,6 +167,8 @@ public class MaterialService {
                     .type("material")
                     .id(material.getUid())
                     .name(material.getMaterialName())
+                    .price(material.getPrice())
+                    .calorie(material.getCalorie())
                     .status(material.getStatus())
                     .img(material.getImg())
                     .build();

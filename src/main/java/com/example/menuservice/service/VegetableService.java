@@ -112,6 +112,8 @@ public class VegetableService {
                     .type("vegetable")
                     .id(vegetable.getUid())
                     .name(vegetable.getVegetableName())
+                    .price(vegetable.getPrice())
+                    .calorie(vegetable.getCalorie())
                     .status(vegetable.getStatus())
                     .img(vegetable.getImg())
                     .build();
@@ -163,6 +165,8 @@ public class VegetableService {
                     .type("vegetable")
                     .id(vegetable.getUid())
                     .name(vegetable.getVegetableName())
+                    .price(vegetable.getPrice())
+                    .calorie(vegetable.getCalorie())
                     .status(vegetable.getStatus())
                     .img(vegetable.getImg())
                     .build();
